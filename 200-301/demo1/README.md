@@ -12,9 +12,7 @@ This lab demonstrates how to configure Virtual LANs (VLANs) across multiple swit
 
 ---
 
-## Network Topology
 
-![Network Topology](Screenshot 2025-06-16 at 5.29.44 PM.png)
 
 ---
 
