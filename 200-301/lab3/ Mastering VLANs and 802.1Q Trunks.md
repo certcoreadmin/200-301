@@ -1,300 +1,277 @@
-# CCNA Lab Guide: VLANs, Trunks, and Network Segmentation
+# CCNA Lab: Mastering VLANs, Trunks, and Troubleshooting
 
-**Candidate:** You, the CCNA Aspirant
-**Mission:** To evolve a simple, flat network into a properly segmented architecture using VLANs and an 802.1Q trunk. This lab focuses on a meticulous, real-world implementation and troubleshooting process.
+[cite_start]**Lab ID:** vlan-trunk-001 
+[cite_start]**Difficulty:** Level 2 (Foundational) 
+[cite_start]**Estimated Time:** 40 Minutes 
+[cite_start]**Core Topics:** Switching, VLANs, 802.1Q Trunking, Troubleshooting 
 
-### Introduction: From Flat to Segmented
+## Introduction: The Isolation Mandate
 
-Welcome to the lab. Today, we're moving beyond basic connectivity. The scenario begins with a simple, flat Layer 2 network where every device can communicate freely. All devices exist in the `10.10.1.0/24` subnet and the default `VLAN 1`. However, a new business requirement has been introduced to create a separate, secure network for the new "Engineering" department and isolate their traffic.
+Welcome, network engineer. You've been assigned to a client with a small but growing network. [cite_start]Currently, their network is flat—a single Layer 2 domain where all devices, from Sales to Engineering, reside in the same broadcast domain (VLAN 1). [cite: 5, 12] [cite_start]This has served them well, but a new security mandate requires the complete network isolation of the Engineering department. [cite: 6] [cite_start]Your task is to implement this segmentation using VLANs and an 802.1Q trunk link. [cite: 8] [cite_start]Along the way, you'll see why simple IP address changes are insufficient [cite: 7][cite_start], and you'll intentionally create and resolve a common trunking misconfiguration, sharpening your troubleshooting skills. 
 
-This lab will guide you through the process of migrating the configuration to one that uses two VLANs. You will configure and verify VLANs, establish a secure 802.1Q trunk link, and deliberately create—then resolve—a common native VLAN mismatch error.
+## Network Diagram
 
-**Core Learning Objectives:**
+![Network Diagram](network_diagram.png)
 
-* Configure and verify standard VLANs to segment a network into separate broadcast domains.
-* Configure and verify an IEEE 802.1Q trunk link to pass traffic for multiple VLANs between switches.
-* Diagnose and resolve common trunking issues, specifically native VLAN mismatches.
-* Implement security best practices for trunk links, including assigning a dedicated, non-user VLAN as the native VLAN.
+## IP Addressing & VLAN Schema (Final State)
 
-### Network Diagram (Target State)
-
-This diagram shows our goal. We will create VLAN 20 for the Engineering department (PC2 and PC4) and leave the Sales department (PC1 and PC3) in a re-purposed VLAN 10. The topology requires two switches and four PCs, with two PCs connected to each switch. The switches are connected by a single link.
-
-### IP Addressing Schema (Initial State)
-
-| Device | Interface | IP Address/Subnet | Default Gateway | Final VLAN |
-| :--- | :--- | :--- | :--- | :--- |
-| PC1 | eth0 | 10.10.1.11/24 | 10.10.1.1 | 10 (Sales) |
-| PC2 | eth0 | 10.10.1.12/24 | 10.10.1.1 | 20 (Engineering) |
-| PC3 | eth0 | 10.10.1.13/24 | 10.10.1.1 | 10 (Sales) |
-| PC4 | eth0 | 10.10.1.14/24 | 10.10.1.1 | 20 (Engineering) |
-| SW1 | Gi0/0 | N/A (Trunk) | N/A | Trunk |
-| SW2 | Gi0/0 | N/A (Trunk) | N/A | Trunk |
+| Device | Interface Assignment | Final IP Address | Subnet Mask | Department | VLAN |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| PC1 | SW1 -> Gi0/1 | `10.10.1.11` | `255.255.255.0` | Sales | 1 |
+| PC2 | SW1 -> Gi0/2 | `10.10.2.12` | `255.255.255.0` | Engineering | 2 |
+| PC3 | SW2 -> Gi0/1 | `10.10.1.13` | `255.255.255.0` | Sales | 1 |
+| PC4 | SW2 -> Gi0/2 | `10.10.2.14` | `255.255.255.0` | Engineering | 2 |
+| SW1/SW2 | Gi0/0 | Trunk Port | N/A | Backbone | Native 256 |
 
 ---
 
-### **Part 1: Baseline Network Verification**
+### **Module 1: Baseline Network Testing**
 
-First, let's verify the initial "flat network" state. The lab starts with a fully converged Layer 2 network where only the default VLAN, VLAN 1, exists, and initial testing verifies full any-to-any connectivity.
+In this module, you will verify the initial state of the network. [cite_start]All devices are in VLAN 1 and the `10.10.1.0/24` subnet, so full communication should be possible. 
 
-1.  **Console into PC1.** Ping every other PC in the topology (PC2, PC3, and PC4).
+1.  **Start all devices in your CML lab.** Open a console to PC1, PC2, PC3, and PC4.
 
-    ```bash
-    # On PC1
-    ping 10.10.1.12 -c 4
-    ping 10.10.1.13 -c 4
-    ping 10.10.1.14 -c 4
-    ```
-
-2.  **Verification Question:** Did all pings succeed? Why?
-
-3.  **Examine the Initial Switch State.** Console into **SW1** and use the following commands to see the default configuration.
+2.  **Verify PC1's Connectivity:** From the console of PC1, ping every other PC to confirm full reachability.
 
     ```bash
-    # On SW1
-    show vlan brief
-    show interfaces status
+    PC1# ping 10.10.1.12
+    PING 10.10.1.12 (10.10.1.12): 56 data bytes
+    64 bytes from 10.10.1.12: seq=0 ttl=64 time=1.192 ms
+    ...
+    PC1# ping 10.10.1.13
+    PING 10.10.1.13 (10.10.1.13): 56 data bytes
+    64 bytes from 10.10.1.13: seq=0 ttl=64 time=1.872 ms
+    ...
+    PC1# ping 10.10.1.14
+    PING 10.10.1.14 (10.10.1.14): 56 data bytes
+    64 bytes from 10.10.1.14: seq=0 ttl=64 time=2.134 ms
+    ...
     ```
 
-    Notice that all connected interfaces (Gi0/1, Gi0/2) are active and assigned to VLAN 1 by default.
+3.  **Examine the Switch MAC Address Table:** Open a console to SW1. View the MAC address table. You should see the MAC addresses of PC1 and PC2 on their local interfaces, and the MACs of PC3 and PC4 learned via the Gi0/0 link from SW2.
+
+    ```
+    SW1# show mac address-table
+    Mac Address Table
+    -------------------------------------------
+    Vlan    Mac Address       Type        Ports
+    ----    -----------       --------    -----
+       1    [MAC_of_PC1]      DYNAMIC     Gi0/1
+       1    [MAC_of_PC2]      DYNAMIC     Gi0/2
+       1    [MAC_of_PC3]      DYNAMIC     Gi0/0
+       1    [MAC_of_PC4]      DYNAMIC     Gi0/0
+    Total Mac Addresses for this criterion: 4
+    ```
+
+> **Verification Question 1:** Why are the MAC addresses for PC3 and PC4 both learned on interface Gi0/0 of SW1?
 
 ---
 
-### **Part 2: The "Wrong" Way - IP-Based Segmentation**
+### **Module 2: The Flawed Approach (IP-Only Segmentation)**
 
-To understand *why* VLANs are necessary, we will first implement the separation incorrectly using only IP addressing. The catalyst for change is the need to segment the network for the "Engineering" department. We'll move the two Engineering PCs to a new subnet.
+The first request is to isolate the Engineering PCs (PC2, PC4). [cite_start]A junior engineer attempts this by simply changing their IP addresses to a new subnet, `10.10.2.0/24`.  Let's execute this plan and observe the failure.
 
-1.  **Re-IP the Engineering PCs.** On PC2 and PC4, change the IP address to the `10.10.2.0/24` subnet.
+1.  **Re-IP the Engineering PCs:**
+    * On **PC2**, run the following commands:
+        ```bash
+        PC2# sudo ip addr del 10.10.1.12/24 dev eth0
+        PC2# sudo ip addr add 10.10.2.12/24 dev eth0
+        ```
+    * On **PC4**, run the following commands:
+        ```bash
+        PC4# sudo ip addr del 10.10.1.14/24 dev eth0
+        PC4# sudo ip addr add 10.10.2.14/24 dev eth0
+        ```
 
-    ```bash
-    # On PC2
-    ip addr del 10.10.1.12/24 dev eth0
-    ip addr add 10.10.2.12/24 dev eth0
+2.  **Test Connectivity:**
+    * From **PC2**, try to ping its Engineering counterpart, **PC4**, at `10.10.2.14`.
+        ```bash
+        PC2# ping 10.10.2.14
+        PING 10.10.2.14 (10.10.2.14): 56 data bytes
+        ^C
+        --- 10.10.2.14 ping statistics ---
+        5 packets transmitted, 0 packets received, 100% packet loss
+        ```
+    * From **PC2**, try to ping a Sales PC, **PC1**, at `10.10.1.11`. This will also fail.
 
-    # On PC4
-    ip addr del 10.10.1.14/24 dev eth0
-    ip addr add 10.10.2.14/24 dev eth0
-    ```
-
-2.  **Test Connectivity.**
-    * From **PC1**, try to ping **PC3** (`10.10.1.13`). It should **succeed**.
-    * From **PC1**, try to ping **PC2** (`10.10.2.12`). It should **fail**.
-    * From **PC2**, try to ping **PC4** (`10.10.2.14`). It should **fail**.
-
-3.  **Verification & Analysis:** We have achieved some isolation, but it's flawed. The hosts are in different IP subnets, so they can't communicate without a router. More importantly, why did the ping from PC2 to PC4 fail? They are both in the "Engineering" subnet.
-
-    The answer is that all ports are still in the same broadcast domain (VLAN 1), exposing them to unnecessary broadcast traffic from the other hosts. When PC2 sends an ARP request for PC4, that broadcast floods out all ports in VLAN 1 on SW1. SW2 receives it and also floods it to all its VLAN 1 ports. PC4 receives it, but its return unicast frame cannot get back to PC2. This is an inefficient and insecure setup.
-
----
-
-### **Part 3: The "Right" Way - VLAN Implementation**
-
-Now, let's correctly segment the network by migrating the configuration to one that uses VLANs. First, revert the IP changes on PC2 and PC4.
-
-```bash
-# On PC2
-ip addr del 10.10.2.12/24 dev eth0
-ip addr add 10.10.1.12/24 dev eth0
-
-# On PC4
-ip addr del 10.10.2.14/24 dev eth0
-ip addr add 10.10.1.14/24 dev eth0
-```
-
-1.  **Create VLANs on Both Switches.** A VLAN must be created on each switch that needs to service it. We will create VLAN 10 for Sales and VLAN 20 for Engineering.
-
-    ```bash
-    # On SW1 and SW2
-    configure terminal
-    vlan 10
-    name Sales
-    vlan 20
-    name Engineering
-    exit
-    ```
-
-2.  **Verify VLAN Creation.** On both switches, use a robust verification methodology. Don't rely on just one command.
-
-    ```bash
-    # On SW1 and SW2
-    show vlan brief
-    show vlan name Sales
-    show vlan id 20
-    ```
-
-3.  **Assign Ports to VLANs.** On each switch, assign the correct access ports to the new VLANs.
-    * **SW1**: Gi0/1 -> VLAN 10 (Sales), Gi0/2 -> VLAN 20 (Engineering)
-    * **SW2**: Gi0/1 -> VLAN 10 (Sales), Gi0/2 -> VLAN 20 (Engineering)
-
-    ```bash
-    # On SW1
-    configure terminal
-    interface GigabitEthernet0/1
-    switchport mode access
-    switchport access vlan 10
-    !
-    interface GigabitEthernet0/2
-    switchport mode access
-    switchport access vlan 20
-    exit
-
-    # On SW2
-    configure terminal
-    interface GigabitEthernet0/1
-    switchport mode access
-    switchport access vlan 10
-    !
-    interface GigabitEthernet0/2
-    switchport mode access
-    switchport access vlan 20
-    exit
-    ```
-
-4.  **Meticulous Port-Level Verification.** Confirm your changes on both switches.
-
-    ```bash
-    # On SW1 and SW2
-    show vlan brief
-    show interface status
-    show interface g0/1 switchport
-    show interface g0/2 switchport
-    ```
-
-    * **Verification Question:** In the `show interface <X> switchport` output, what is the "Administrative Mode" and the "Operational Mode"?
-
-5.  **Test Connectivity.**
-    * From PC1 (`10.10.1.11`), ping PC3 (`10.10.1.13`). **This should fail.**
-    * From PC2 (`10.10.1.12`), ping PC4 (`10.10.1.14`). **This should fail.**
-    * Why? The hosts are now in separate broadcast domains, but the link between SW1 and SW2 is still a simple access port in VLAN 1. It doesn't know how to pass traffic for VLANs 10 and 20. We need a trunk.
+> **Verification Question 2:** The ping from PC2 to PC4 failed. Both are on the same IP subnet (`10.10.2.0/24`) and the switches between them are functional. Why can't they communicate? (Hint: Think about Layer 2 vs. Layer 3 and broadcast domains).
 
 ---
 
-### **Part 4: Implementing the 802.1Q Trunk**
+### **Module 3: Proper Segmentation (VLAN Implementation)**
 
-A trunk is a point-to-point link that can carry traffic for multiple VLANs. We will manually configure the link between SW1 and SW2 (Gi0/0) as a manually configured 802.1Q trunk.
+Now, let's implement the correct solution. We will create a new VLAN for the Engineering department and assign the correct switch ports to it.
 
-1.  **Configure Trunk on SW1 and SW2.**
+1.  **Create the Engineering VLAN:** Create VLAN 2 on both switches.
+    * On **SW1** and **SW2**:
+        ```
+        SW1# conf t
+        Enter configuration commands, one per line.  End with CNTL/Z.
+        SW1(config)# vlan 2
+        SW1(config-vlan)# name Engineering
+        SW1(config-vlan)# exit
+        ```
 
-    ```bash
-    # On SW1 and SW2
-    configure terminal
-    interface GigabitEthernet0/0
-    switchport trunk encapsulation dot1q
-    switchport mode trunk
-    exit
+2.  **Verify VLAN Creation:** Use a variety of `show` commands to see the new VLAN from different perspectives. This is a key skill.
+    ```
+    SW1(config)# do show vlan brief
+
+    VLAN  Name                             Status    Ports
+    ----  -------------------------------- --------- --------------------------------
+    1     default                          active    Gi0/0, Gi0/1, Gi0/2, Gi0/3
+                                                     Gi1/0, Gi1/1, Gi1/2, Gi1/3
+    2     Engineering                      active    
+    ...
+
+    SW1(config)# do show vlan name Engineering
+
+    VLAN  Name                             Status    Ports
+    ----  -------------------------------- --------- --------------------------------
+    2     Engineering                      active
     ```
 
-> #### **Exam-Level Deep Dive: Trunking Protocols & Modes**
->
-> * **`switchport trunk encapsulation dot1q`**: This command explicitly sets the trunking protocol to IEEE 802.1Q. The lab requires you to manually set the trunking protocol to dot1q, explaining that it is the modern standard over older, proprietary protocols like ISL.
-> * **`switchport mode trunk`**: We are explicitly setting the interface to be a trunk. The student is guided to manually configure the switchport mode to trunk rather than relying on the default dynamic auto-negotiation (DTP). Relying on DTP is not a security best practice, as it can lead to unintended trunks forming if a misconfigured device is connected. Manually setting the mode to `trunk` disables DTP and hard-codes the interface's function.
+3.  **Assign Access Ports to VLAN 2:** On each switch, assign the port connected to the Engineering PC to VLAN 2.
+    * On **SW1**:
+        ```
+        SW1(config)# interface gigabitEthernet 0/2
+        SW1(config-if)# switchport mode access
+        SW1(config-if)# switchport access vlan 2
+        ```
+    * On **SW2**:
+        ```
+        SW2(config)# interface gigabitEthernet 0/2
+        SW2(config-if)# switchport mode access
+        SW2(config-if)# switchport access vlan 2
+        ```
 
-2.  **Verify the Trunk.** Use a comprehensive set of commands on both switches.
+4.  **Verify Port Assignment:** Confirm the ports are now in VLAN 2.
+    * On **SW1**:
+        ```
+        SW1(config-if)# do show vlan brief
 
-    ```bash
-    # On SW1 and SW2
-    show interfaces trunk
-    show interface g0/0 switchport
-    ```
+        VLAN  Name                             Status    Ports
+        ----  -------------------------------- --------- --------------------------------
+        1     default                          active    Gi0/0, Gi0/1, Gi0/3, Gi1/0
+                                                         Gi1/1, Gi1/2, Gi1/3
+        2     Engineering                      active    Gi0/2
 
-    * **Verification Question:** In the `show interfaces trunk` output, what is the status of the trunk? What VLANs are allowed to cross it?
+        SW1(config-if)# do show interface gi0/2 switchport
+        Name: Gi0/2
+        Switchport: Enabled
+        Administrative Mode: static access
+        Operational Mode: static access
+        ...
+        Access Mode VLAN: 2 (Engineering)
+        ...
+        ```
+    * Run similar verification commands on **SW2**.
 
-3.  **Test Cross-Switch Connectivity.** Now that the trunk is up, let's re-run our tests.
-    * From **PC1** (VLAN 10), ping **PC3** (VLAN 10). It should **SUCCEED**.
-    * From **PC2** (VLAN 20), ping **PC4** (VLAN 20). It should **SUCCEED**.
-    * From **PC1** (VLAN 10), ping **PC2** (VLAN 20). It should **FAIL**.
-    * From **PC1** (VLAN 10), ping **PC4** (VLAN 20). It should **FAIL**.
+> At this point, try pinging from PC2 to PC4 again. It will still fail. Why? Because the switches have no way to pass VLAN 2 traffic between them. The Gi0/0 link is still an access port in VLAN 1. We need a trunk.
 
 ---
 
-### **Part 5: The "Aha!" Moment - Native VLAN Mismatch**
+### **Module 4: Trunk Configuration & The "Aha!" Moment**
 
-Now for a critical troubleshooting exercise. The *native VLAN* on an 802.1Q trunk is the one VLAN whose traffic crosses the trunk *without* an 802.1Q tag. The lab deliberately engineers a native VLAN mismatch.
+This is the core of the lab. [cite_start]You will configure the trunk link, but with a deliberate native VLAN mismatch to witness and diagnose the resulting error. 
 
-1.  **Create a Mismatch.** On **SW1 only**, change the native VLAN to 99.
-
-    ```bash
-    # On SW1 ONLY
-    configure terminal
-    interface GigabitEthernet0/0
-    switchport trunk native vlan 99
-    exit
+1.  **Configure Trunk on SW1:**
+    ```
+    SW1(config)# interface gigabitEthernet 0/0
+    SW1(config-if)# switchport trunk encapsulation dot1q
+    SW1(config-if)# switchport mode trunk
+    SW1(config-if)# switchport trunk native vlan 256
+    SW1(config-if)# switchport nonegotiate
     ```
 
-2.  **Observe the Error!** Wait about 30-60 seconds. You should see log messages appearing on the console of **both** switches, complaining about a native VLAN mismatch. This is Cisco Discovery Protocol (CDP) at work!
+> ### **Exam-Level Deep Dive: DTP and Trunk Security**
+> * `switchport trunk encapsulation dot1q`: On older switches, you had to choose between the proprietary Cisco ISL and the industry-standard IEEE 802.1Q. Modern switches only use 802.1Q, but the command is still part of the syntax. [cite_start]We use it to be explicit. 
+> * `switchport nonegotiate`: This command disables the Dynamic Trunking Protocol (DTP). DTP's job is to automatically negotiate a trunk link. While convenient, it's a security risk. An attacker could plug a device into a port, send DTP packets, and form a trunk, giving them access to all VLANs. Disabling DTP and manually configuring trunks (`switchport mode trunk`) is a critical security best practice. 
+> * `switchport trunk native vlan 256`: The native VLAN is the one VLAN whose traffic crosses a trunk link *without* an 802.1Q tag. For security, this should never be VLAN 1 or a user data VLAN. [cite_start]We choose an unused, dedicated VLAN.  The number 256 is chosen because it's memorable—it's an invalid number in an IPv4 octet, making it easy to remember as "not for hosts."
 
+2.  **Configure Trunk on SW2 (Intentionally Incorrect):**
     ```
-    %CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on GigabitEthernet0/0 (99), with SW2 GigabitEthernet0/0 (1).
+    SW2(config)# interface gigabitEthernet 0/0
+    SW2(config-if)# switchport trunk encapsulation dot1q
+    SW2(config-if)# switchport mode trunk
+    SW2(config-if)# no switchport trunk native vlan
+    SW2(config-if)# switchport nonegotiate
     ```
+    *By not setting the native VLAN, we are leaving it at the default of VLAN 1.*
 
-3.  **Verify the Symptom.** Even with the error, the trunk is technically "up". But it's in a dangerous and unpredictable state. The mismatch is caused by an inconsistent configuration across the link. Use this command on both switches to confirm the mismatch.
-
-    ```bash
-    # On SW1 and SW2
-    show interfaces trunk
+3.  **Detect the Mismatch:** Wait about 30-60 seconds. Cisco Discovery Protocol (CDP) runs between the switches and will detect this problem. Check the logs on **both** switches.
     ```
-
-    Un-tagged traffic sent from SW1 (like CDP or DTP) is expected to be in VLAN 99, but SW2 receives it and believes it belongs to its own native VLAN, VLAN 1. This is a security risk and causes protocols to misbehave.
-
-4.  **Resolve the Mismatch.** On **SW2**, apply the correct configuration to resolve the error.
-
-    ```bash
-    # On SW2
-    configure terminal
-    interface GigabitEthernet0/0
-    switchport trunk native vlan 99
-    exit
+    SW1#
+    *Jun 19 20:15:00.123: %CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on GigabitEthernet0/0 (256), with SW2 GigabitEthernet0/0 (1).
     ```
 
-    The console errors should cease.
+4.  **Verify with `show` commands:** The `show interfaces trunk` command also reveals the issue, although less explicitly than the log message.
+    ```
+    SW1# show interfaces trunk
+    Port        Mode         Encapsulation  Status        Native vlan
+    Gi0/0       on           802.1q         trunking      256
+
+    Port        Vlans allowed on trunk
+    Gi0/0       1-4094
+    ...
+    ```
+
+> **Verification Question 3:** Besides the log message, what other command could you use with a `neighbor` keyword to get detailed information about SW2, including its native VLAN setting?
 
 ---
 
-### **Part 6: Security Best Practice - The Blackhole VLAN**
+### **Module 5: Resolution and Final Verification**
 
-The lab stresses that the native VLAN should not be the default VLAN 1. The best practice is to create a dedicated, unused VLAN for the native VLAN on all trunks. This acts as a "blackhole"—any traffic mistakenly sent into it goes nowhere.
+Let's fix the native VLAN mismatch and complete the lab by verifying full, but segmented, connectivity.
 
-1.  **Create the Blackhole VLAN.** On **both switches**, create a new, unused VLAN.
-
-    ```bash
-    # On SW1 and SW2
-    configure terminal
-    vlan 999
-    name Blackhole
-    exit
+1.  **Correct the Native VLAN on SW2:**
+    ```
+    SW2# conf t
+    SW2(config)# interface gigabitEthernet 0/0
+    SW2(config-if)# switchport trunk native vlan 256
     ```
 
-2.  **Assign the Blackhole VLAN as Native.** Apply this configuration to the trunk interface on **both switches**.
-
-    ```bash
-    # On SW1 and SW2
-    configure terminal
-    interface GigabitEthernet0/0
-    switchport trunk native vlan 999
-    exit
+2.  **Verify Trunk Status:** The trunk should now be consistent across both switches.
+    ```
+    SW2(config-if)# do show interfaces trunk
+    Port        Mode         Encapsulation  Status        Native vlan
+    Gi0/0       on           802.1q         trunking      256
+    ...
     ```
 
-> #### **Exam-Level Deep Dive: Native VLAN Security**
->
-> Why did we choose VLAN 999? We need a VLAN that will *never* have user devices assigned to it and will never have a Switched Virtual Interface (SVI) for routing. By using a dedicated, documented, and unused VLAN as the native VLAN, we enhance security. If an attacker somehow managed to send untagged traffic into our trunk (a technique called VLAN hopping), that traffic would be dumped into the dead-end VLAN 999, effectively neutralizing the attack.
+3.  **Final Connectivity Test:**
+    * From **PC2**, ping **PC4**. The ping should now succeed!
+        ```bash
+        PC2# ping 10.10.2.14
+        PING 10.10.2.14 (10.10.2.14): 56 data bytes
+        64 bytes from 10.10.2.14: seq=0 ttl=64 time=2.543 ms
+        ```
+    * From **PC1**, ping **PC3**. This should also succeed as they are both in VLAN 1.
+        ```bash
+        PC1# ping 10.10.1.13
+        PING 10.10.1.13 (10.10.1.13): 56 data bytes
+        64 bytes from 10.10.1.13: seq=0 ttl=64 time=1.998 ms
+        ```
+    * From **PC2** (VLAN 2), attempt to ping **PC1** (VLAN 1). This ping **MUST FAIL**.
+        ```bash
+        PC2# ping 10.10.1.11
+        PING 10.10.1.11 (10.10.1.11): 56 data bytes
+        ^C
+        --- 10.10.1.11 ping statistics ---
+        5 packets transmitted, 0 packets received, 100% packet loss
+        ```
 
-3.  **Final Verification.** On both switches, verify the final state of your trunk.
+Congratulations! You have successfully segmented the network. [cite_start]Hosts within the same VLAN can communicate across switches, but inter-VLAN communication is blocked, as intended.  [cite_start]This sets the stage perfectly for a future lab on Inter-VLAN routing. 
 
-    ```bash
-    # On SW1 and SW2
-    show interfaces trunk
-    ```
+## Summary of Skills Learned
 
-    The native VLAN should now be 999 on both ends, and all console errors should be gone. Connectivity within VLANs 10 and 20 should still be perfect, and isolation between them should be absolute.
+* [cite_start]**VLAN Configuration:** Created VLANs and assigned names. 
+* [cite_start]**Access Port Assignment:** Assigned switch ports to specific VLANs. 
+* [cite_start]**802.1Q Trunking:** Manually configured a trunk link with best practices. 
+* [cite_start]**Troubleshooting:** Diagnosed and resolved a native VLAN mismatch using CDP logs and verification commands. 
+* [cite_start]**Security Best Practices:** Disabled DTP and utilized a dedicated native VLAN for enhanced security. 
 
-### Conclusion & Next Steps
+## Answer Key
 
-Congratulations. You have successfully segmented a flat network into two distinct, functional VLANs operating across both switches. You configured a secure 802.1Q trunk link, diagnosed and resolved a native VLAN mismatch, and implemented security best practices.
-
-You have now demonstrated complete isolation between the Sales and Engineering departments. While this is secure, it's not yet functional for inter-departmental work. This state of complete separation creates the perfect justification for a subsequent lab on Inter-VLAN Routing.
-
-### **Answer Key**
-
-* **Part 1, Question 2:** Yes, all pings succeeded. In the initial state, all PCs and switch ports were in the same subnet (`10.10.1.0/24`) and the same broadcast domain (VLAN 1), allowing for free communication across the entire Layer 2 fabric.
-* **Part 3, Question 4:** The `Administrative Mode` should be `access`, and the `Operational Mode` should also be `access`. This confirms the `switchport mode access` command took effect.
-* **Part 4, Question 2:** The trunk status should be `trunking`. The allowed VLANs list should show all active VLANs by default (1, 10, 20). The `show interface G0/0 switchport` command will also show the `Administrative Mode` as `trunk`.
+1.  **Question 1:** Because SW1 and SW2 are connected by a simple Layer 2 link (in VLAN 1 by default), SW1 learns the MAC addresses of any devices connected to SW2 through that single connecting port, Gi0/0.
+2.  **Question 2:** Even though the PCs are on the same IP subnet, they are still in the same Layer 2 broadcast domain (VLAN 1). When PC2 sends an ARP request for PC4's MAC address, that broadcast is heard by PC1 and PC3, who are on a different IP subnet and will ignore it. The switches happily forward the broadcast across the domain, but no device on the `10.10.2.0/24` network can reply to the ARP from the `10.10.1.0/24` devices, and vice-versa. [cite_start]Proper VLANs are needed to create separate L2 broadcast domains. 
+3.  **Question 3:** The command `show cdp neighbors detail` would provide extensive information about SW2 from the perspective of SW1, including its IP address, platform, and the native VLAN configured on its end of the link.
