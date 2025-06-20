@@ -1,6 +1,5 @@
 # CCNA Lab Guide: VLANs, Trunks, and Network Segmentation
 
-**Role:** CCIE #70000
 **Candidate:** You, the CCNA Aspirant
 **Mission:** To evolve a simple, flat network into a properly segmented architecture using VLANs and an 802.1Q trunk. This lab focuses on a meticulous, real-world implementation and troubleshooting process.
 
