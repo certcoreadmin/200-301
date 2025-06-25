@@ -1,0 +1,320 @@
+# CML 2.8.1+ Lab File for CCNA IPv4 Subnetting Lab
+# Final Architecture: Dual Core Routers, 1 PC per Access Switch
+annotations: []
+smart_annotations: []
+nodes:
+  # Core Routers
+  - id: n0
+    label: R1
+    node_definition: iosv
+    x: -100
+    y: -150
+    configuration:
+      - name: ios_config.txt
+        content: |
+          hostname R1
+          no ip domain-lookup
+    interfaces:
+      - id: i0
+        label: GigabitEthernet0/0
+        slot: 0
+        type: physical
+      - id: i1
+        label: GigabitEthernet0/1
+        slot: 1
+        type: physical
+      - id: i2
+        label: GigabitEthernet0/2
+        slot: 2
+        type: physical
+  - id: n1
+    label: R2
+    node_definition: iosv
+    x: 100
+    y: -150
+    configuration:
+      - name: ios_config.txt
+        content: |
+          hostname R2
+          no ip domain-lookup
+    interfaces:
+      - id: i0
+        label: GigabitEthernet0/0
+        slot: 0
+        type: physical
+      - id: i1
+        label: GigabitEthernet0/1
+        slot: 1
+        type: physical
+      - id: i2
+        label: GigabitEthernet0/2
+        slot: 2
+        type: physical
+
+  # Distribution Switches
+  - id: n2
+    label: DSW1
+    node_definition: iosvl2
+    x: -200
+    y: 50
+    configuration:
+      - name: ios_config.txt
+        content: |
+          hostname DSW1
+          no ip domain-lookup
+    interfaces:
+      - id: i0
+        label: GigabitEthernet0/0
+        slot: 0
+        type: physical
+      - id: i1
+        label: GigabitEthernet0/1
+        slot: 1
+        type: physical
+      - id: i2
+        label: GigabitEthernet0/2
+        slot: 2
+        type: physical
+      - id: i3
+        label: GigabitEthernet0/3
+        slot: 3
+        type: physical
+  - id: n3
+    label: DSW2
+    node_definition: iosvl2
+    x: 200
+    y: 50
+    configuration:
+      - name: ios_config.txt
+        content: |
+          hostname DSW2
+          no ip domain-lookup
+    interfaces:
+      - id: i0
+        label: GigabitEthernet0/0
+        slot: 0
+        type: physical
+      - id: i1
+        label: GigabitEthernet0/1
+        slot: 1
+        type: physical
+      - id: i2
+        label: GigabitEthernet0/2
+        slot: 2
+        type: physical
+      - id: i3
+        label: GigabitEthernet0/3
+        slot: 3
+        type: physical
+
+  # Access Switches
+  - id: n4
+    label: ASW1
+    node_definition: iosvl2
+    x: -300
+    y: 250
+    configuration:
+      - name: ios_config.txt
+        content: "hostname ASW1\nno ip domain-lookup"
+    interfaces:
+      - id: i0
+        label: GigabitEthernet0/0
+        slot: 0
+        type: physical
+      - id: i1
+        label: GigabitEthernet0/1
+        slot: 1
+        type: physical
+  - id: n5
+    label: ASW2
+    node_definition: iosvl2
+    x: -100
+    y: 250
+    configuration:
+      - name: ios_config.txt
+        content: "hostname ASW2\nno ip domain-lookup"
+    interfaces:
+      - id: i0
+        label: GigabitEthernet0/0
+        slot: 0
+        type: physical
+      - id: i1
+        label: GigabitEthernet0/1
+        slot: 1
+        type: physical
+  - id: n6
+    label: ASW3
+    node_definition: iosvl2
+    x: 100
+    y: 250
+    configuration:
+      - name: ios_config.txt
+        content: "hostname ASW3\nno ip domain-lookup"
+    interfaces:
+      - id: i0
+        label: GigabitEthernet0/0
+        slot: 0
+        type: physical
+      - id: i1
+        label: GigabitEthernet0/1
+        slot: 1
+        type: physical
+  - id: n7
+    label: ASW4
+    node_definition: iosvl2
+    x: 300
+    y: 250
+    configuration:
+      - name: ios_config.txt
+        content: "hostname ASW4\nno ip domain-lookup"
+    interfaces:
+      - id: i0
+        label: GigabitEthernet0/0
+        slot: 0
+        type: physical
+      - id: i1
+        label: GigabitEthernet0/1
+        slot: 1
+        type: physical
+
+  # End Hosts (PCs)
+  - id: n8
+    label: PC1
+    node_definition: alpine
+    x: -300
+    y: 400
+    configuration:
+      - name: node.cfg
+        content: "hostname PC1"
+    interfaces:
+      - id: i0
+        label: eth0
+        slot: 0
+        type: physical
+  - id: n9
+    label: PC2
+    node_definition: alpine
+    x: -100
+    y: 400
+    configuration:
+      - name: node.cfg
+        content: "hostname PC2"
+    interfaces:
+      - id: i0
+        label: eth0
+        slot: 0
+        type: physical
+  - id: n10
+    label: PC3
+    node_definition: alpine
+    x: 100
+    y: 400
+    configuration:
+      - name: node.cfg
+        content: "hostname PC3"
+    interfaces:
+      - id: i0
+        label: eth0
+        slot: 0
+        type: physical
+  - id: n11
+    label: PC4
+    node_definition: alpine
+    x: 300
+    y: 400
+    configuration:
+      - name: node.cfg
+        content: "hostname PC4"
+    interfaces:
+      - id: i0
+        label: eth0
+        slot: 0
+        type: physical
+
+links:
+  # Core Link
+  - id: l0
+    n1: n0
+    i1: i0
+    n2: n1
+    i2: i0
+    label: R1(g0/0) <-> R2(g0/0)
+  # Distribution to Core Links
+  - id: l1
+    n1: n0
+    i1: i1
+    n2: n2
+    i2: i0
+    label: R1(g0/1) <-> DSW1(g0/0)
+  - id: l2
+    n1: n0
+    i1: i2
+    n2: n3
+    i2: i0
+    label: R1(g0/2) <-> DSW2(g0/0)
+  - id: l3
+    n1: n1
+    i1: i1
+    n2: n2
+    i2: i1
+    label: R2(g0/1) <-> DSW1(g0/1)
+  - id: l4
+    n1: n1
+    i1: i2
+    n2: n3
+    i2: i1
+    label: R2(g0/2) <-> DSW2(g0/1)
+  # Access to Distribution Links
+  - id: l5
+    n1: n2
+    i1: i2
+    n2: n4
+    i2: i0
+    label: DSW1(g0/2) <-> ASW1(g0/0)
+  - id: l6
+    n1: n2
+    i1: i3
+    n2: n5
+    i2: i0
+    label: DSW1(g0/3) <-> ASW2(g0/0)
+  - id: l7
+    n1: n3
+    i1: i2
+    n2: n6
+    i2: i0
+    label: DSW2(g0/2) <-> ASW3(g0/0)
+  - id: l8
+    n1: n3
+    i1: i3
+    n2: n7
+    i2: i0
+    label: DSW2(g0/3) <-> ASW4(g0/0)
+  # Host to Access Links
+  - id: l9
+    n1: n4
+    i1: i1
+    n2: n8
+    i2: i0
+    label: ASW1(g0/1) <-> PC1
+  - id: l10
+    n1: n5
+    i1: i1
+    n2: n9
+    i2: i0
+    label: ASW2(g0/1) <-> PC2
+  - id: l11
+    n1: n6
+    i1: i1
+    n2: n10
+    i2: i0
+    label: ASW3(g0/1) <-> PC3
+  - id: l12
+    n1: n7
+    i1: i1
+    n2: n11
+    i2: i0
+    label: ASW4(g0/1) <-> PC4
+lab:
+  title: "CCNA - Dual-Core IPv4 Addressing"
+  version: "0.3.0"
+  timestamp: "2024-06-21 04:00:00"

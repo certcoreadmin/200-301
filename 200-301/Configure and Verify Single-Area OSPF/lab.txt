@@ -1,0 +1,252 @@
+
+Configure and Verify Single-Area OSPF
+This activity will guide you through the configuration and verification of OSPF for IPv4 on a Cisco IOS router. The lab is prepared with the devices that are represented in the topology diagram and the connectivity table. All devices have their basic configurations in place, including hostnames and IPv4 addresses. R2 and R3 are also configured with OSPF. You will configure OSPF on R1 and verify the results.
+
+[
+  {
+    "commandExamples": [
+      {
+        "classes": "language-cisco-ios font-mono hljs",
+        "content": "Router(config)# router ospf process-id"
+      },
+      {
+        "classes": "language-cisco-ios font-mono hljs",
+        "content": "Router(config-router)# network ip-address wildcard-mask area area-id"
+      },
+      {
+        "classes": "language-cisco-ios font-mono hljs",
+        "content": "Router(config-if)# ip ospf process-id area area-id"
+      }
+    ],
+    "description": "You can configure basic OSPF in two steps:\n\nInstead of identifying networks, you can alternatively enable OSPF on an interface.\n\nThe `router ospf` command uses a process identifier as an argument. The process ID is a unique, arbitrary number that you select to identify the routing process. The process ID is locally significant and does not need to match the OSPF process ID on other OSPF routers. However, best practice suggests that the process ID should be the same on all routers in the same routing domain.\n\nThe `network` command identifies which IPv4 networks on the router are part of the OSPF network. For each network, you must also identify the OSPF area to which the networks belong. The network that is identified in the `network` command does not tell the router which network to advertise; instead, it indicates the interfaces on which OSPF will be enabled. Then, the network configured on these interfaces will be advertised into OSPF.\n\nAs with subnet mask and an IPv4 address, a wildcard mask is a string of 32 binary digits. However, a wildcard mask is used by a device to determine which bits of the address to examine for a match. A wildcard mask is not used on its own. It is used with an IPv4 address. The matching rule consists of a reference IPv4 address and a wildcard mask that applies to it. When a wildcard mask is applied to the reference IPv4 address, the result is the matching pattern of binary digits. For a match to occur, the IPv4 address from the packet header must match the resulting pattern.\n\nThe wildcard mask bits are used as follows:\n\n- Where wildcard mask bit is 0: the value found at the same position in the reference IPv4 address must be matched.\n\n- Where wildcard mask bit is 1: the value found at the same position in the reference IPv4 address can be ignored.\n\nComplete the following steps:",
+    "title": "Configure and Verify Single-Area OSPF",
+    "type": "Section Title"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R2# show running-config | section ospf\nrouter ospf 1\n router-id 2.2.2.2\n network 10.0.1.0 0.0.0.255 area 0\n network 10.2.1.0 0.0.0.255 area 0\n network 10.10.12.0 0.0.0.255 area 0"
+        }
+      ],
+      "text": "On R2, enter the following command:\n\nYou should see that OSPF with the process ID 1 is preconfigured to run on interfaces whose IPv4 address matches the network statements:\n\nEthernet0/0 (10.0.1.1 matches 10.0.1.0 0.0.0.255 because the first three octets match)\n\nEthernet0/2 (10.2.1.2 matches 10.2.1.0 0.0.0.255 because the first three octets match)\n\nLoopback0 (10.10.12.1 matches 10.10.12.0 0.0.0.255 because the first three octets match)\n\nIf you refer to the Job Aids, you can quickly see that the configured OSPF networks are associated with each of the active interfaces on R2. All networks, meaning all active interfaces on the router, belong to the same area—Area 0.\n\nAt this point, note that the router is configured with the router ID 2.2.2.2."
+    },
+    "instructions": "Verify the OSPF configuration on router R2 using the `show running-config` command.",
+    "title": "Step 1",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R3# show ip protocols\n*** IP Routing is NSF aware ***\n\nRouting Protocol is \"ospf 1\"\n  Outgoing update filter list for all interfaces is not set\n  Incoming update filter list for all interfaces is not set\n  Router ID 3.3.3.3\n  Number of areas in this router is 1. 1 normal 0 stub 0 nssa\n  Maximum path: 4\n  Routing for Networks:\n    10.1.1.0 0.0.0.255 area 0\n    10.2.1.0 0.0.0.255 area 0\n    10.10.13.0 0.0.0.255 area 0\n  Routing Information Sources:\n    Gateway         Distance      Last Update\n    2.2.2.2              110      17:04:48\n  Distance: (default is 110)"
+        }
+      ],
+      "text": "On R3, enter the following command:\n\nYou should see that only the OSPF routing protocol is configured on R3. OSPF uses the process ID 1 and is preconfigured to run on interfaces whose IPv4 address matches the network statements:\n\nEthernet0/1 (10.1.1.3)\n\nEthernet0/2 (10.2.1.3)\n\nLoopback0 (10.10.13.1)\n\nIf you refer to the Job Aids, you can see that OSPF on R3 is enabled on all enabled interfaces. All networks, or all interfaces on the router, belong to the same area—Area 0.\n\nThe router is preconfigured with the router ID 3.3.3.3."
+    },
+    "instructions": "Another way to verify that the OSPF configuration is by using the `show ip protocols` command. This command will display the status of the configured dynamic routing protocols on a router. Verify the OSPF configuration on router R3.",
+    "title": "Step 2",
+    "type": "Lab Step"
+  },
+  {
+    "title": "Router ID",
+    "type": "Section Title"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R1# configure terminal\nR1(config)# router ospf 1\nR1(config-router)# router-id 1.1.1.1\nR1(config-router)# network 10.0.1.0 0.0.0.255 area 0\nR1(config-router)# network 10.1.1.0 0.0.0.255 area 0\nR1(config-router)# network 10.10.11.0 0.0.0.255 area 0\nR1(config-router)# end"
+        },
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "*Oct 13 07:24:35.278: %OSPF-5-ADJCHG: Process 1, Nbr 2.2.2.2 on Ethernet0/0 from LOADING to FULL, Loading Done\n*Oct 13 07:24:46.037: %OSPF-5-ADJCHG: Process 1, Nbr 3.3.3.3 on Ethernet0/1 from LOADING to FULL, Loading Done."
+        }
+      ],
+      "text": "On R1, enter the following commands:\n\nDuring configuration, a syslog message indicates that new adjacencies have been initiated with two neighbors, R2 and R3. The OSPF neighbor state is “FULL”, which means that they have synchronized to each other and share the same LSDB knowledge. Note that R2 and R3 are represented by the preconfigured router IDs, 2.2.2.2 and 3.3.3.3, respectively."
+    },
+    "instructions": "On R1, you should configure OSPF process ID 1. Configure the router ID to 1.1.1.1. Include all the networks that are associated with each of the three active interfaces for R1 in Area 0.",
+    "title": "Step 3",
+    "type": "Lab Step"
+  },
+  {
+    "title": "Verify Single-Area OSPF",
+    "type": "Section Title"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R1# show ip ospf interface brief\nInterface    PID   Area            IP Address/Mask    Cost  State Nbrs F/C\nLo0          1     0               10.10.11.1/24      1     P2P  0/0\nEt0/1        1     0               10.1.1.1/24        10    BDR   1/1\nEt0/0        1     0               10.0.1.1/24        10    BDR   1/1"
+        }
+      ],
+      "text": "On R1, enter the following command:\n\nEthernet0/0, Ethernet0/1, and Loopback0 are participating in OSPF in Area 0, under process ID 1 and belong to Area 0. The cost on Ethernet0/0 and Ethernet0/1 interfaces is 10, because they both are Ethernet interfaces, while the Loopback0 interface has a cost of 1. By default, the cost on loopback interfaces is set to 1."
+    },
+    "instructions": "Display the interfaces on R1 that are participating in OSPF.",
+    "title": "Step 4",
+    "type": "Lab Step"
+  },
+  {
+    "title": "Hello and dead intervals",
+    "type": "Section Title"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R1# show ip ospf interface \nLoopback0 is up, line protocol is up \n  Internet Address 10.10.11.1/24, Area 0, Attached via Network Statement\n  Process ID 1, Router ID 1.1.1.1, Network Type POINT_TO_POINT, Cost: 1\n  Topology-MTID    Cost    Disabled    Shutdown      Topology Name\n        0           1         no          no            Base\n  Transmit Delay is 1 sec, State POINT_TO_POINT\n  Timer intervals configured, Hello 10, Dead 40, Wait 40, Retransmit 5\n    oob-resync timeout 40\n  <--- output omitted --->\nEthernet0/1 is up, line protocol is up \n  Internet Address 10.1.1.1/24, Area 0, Attached via Network Statement\n  Process ID 1, Router ID 1.1.1.1, Network Type BROADCAST, Cost: 10\n  Topology-MTID    Cost    Disabled    Shutdown      Topology Name\n        0           10        no          no            Base\n  Transmit Delay is 1 sec, State BDR, Priority 1\n  <--- output omitted --->\nEthernet0/0 is up, line protocol is up \n  Internet Address 10.0.1.1/24, Area 0, Attached via Network Statement\n  Process ID 1, Router ID 1.1.1.1, Network Type BROADCAST, Cost: 10\n  Topology-MTID    Cost    Disabled    Shutdown      Topology Name\n        0           10        no          no            Base\n  Transmit Delay is 1 sec, State BDR, Priority 1\n  Designated Router (ID) 2.2.2.2, Interface address 10.0.1.2\n  Backup Designated router (ID) 1.1.1.1, Interface address 10.0.1.1\n <--- output omitted --->"
+        }
+      ],
+      "text": "On R1, enter the following command:\n\nThe output of this command provides many details about all interfaces on the router that participate in OSPF. Ethernet0/0, Ethernet0/1, and Loopback 0 interfaces are all active (status and line protocol is “up”) and belong to OSPF area 0. They share the same information about the process ID and router ID, which is 1 and 1.1.1.1, respectively. The cost for the loopback 0 interface is 1, while the cost for each Ethernet interface is 10.\n\nThe output of this command also provides information about OSPF timers. On these interfaces the hello interval has a default value of 10 seconds and the dead interval also has a default value of 40 seconds."
+    },
+    "instructions": "Display detailed information about the interfaces on R1 that are participating in OSPF.",
+    "title": "Step 5",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R1# show ip protocols\n*** IP Routing is NSF aware ***\n\nRouting Protocol is \"ospf 1\"\n  Outgoing update filter list for all interfaces is not set\n  Incoming update filter list for all interfaces is not set\n  Router ID 1.1.1.1\n  Number of areas in this router is 1. 1 normal 0 stub 0 nssa\n  Maximum path: 4\n  Routing for Networks:\n    10.0.1.0 0.0.0.255 area 0\n    10.1.1.0 0.0.0.255 area 0\n    10.10.11.0 0.0.0.255 area 0\n  Routing Information Sources:\n    Gateway         Distance      Last Update\n    2.2.2.2              110      00:02:46\n    3.3.3.3              110      00:02:36\n  Distance: (default is 110)"
+        }
+      ],
+      "text": "On R1, enter the following command:\n\nYou should see only OSPF configuration because OSPF is the only routing protocol that is running on R1. The router ID is 1.1.1.1. OSPF uses process ID 1 and is configured to run on the interfaces whose IPv4 address matches the network statements:\n\nEthernet0/0 (10.0.1.1)\n\nEthernet0/1 (10.1.1.1)\n\nLoopback0 (10.10.11.1)\n\nAll three interfaces participate in the same OSPF area 0.\n\nIn addition to all that information, the `show ip protocols` command also provides information about the OSPF neighbors, which are identified in the Gateway column. 2.2.2.2 and 3.3.3.3 are the router IDs of R2 and R3, respectively."
+    },
+    "instructions": "Verify the OSPF configuration on R1.",
+    "title": "Step 6",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R1# show ip ospf neighbor\n\nNeighbor ID     Pri   State           Dead Time   Address         Interface\n3.3.3.3           1   FULL/DR         00:00:38    10.1.1.3        Ethernet0/1\n2.2.2.2           1   FULL/DR         00:00:34    10.0.1.2        Ethernet0/0"
+        }
+      ],
+      "text": "On R1, enter the following command:\n\nR1 has two neighbors:\n\n3.3.3.3 (router ID of R3), which can be reached via the Ethernet0/1 interface. The 10.1.1.3 IPv4 address is used on the R3 interface to which R1 directly connects.\n\n2.2.2.2 (router ID of R2), which can be reached via the Ethernet0/0 interface. The 10.0.1.2 IPv4 address is used on the R2 interface to which R1 directly connects.\n\nNotice that the neighbor state is \"FULL/DR\" indicating that the OSPF adjacency is established and both of the neighbors are DR routers on the link with R1. Instead of DR, you could also see a BDR state, indicating that the router is BDR or DROTHER. DROTHER would indicate that the router is neither the DR nor the BDR. A router could be DROTHER either because other routers are DR and BDR (on a LAN with more than two routers) or because the router has its priority set to 0 and therefore it cannot become the DR or BDR."
+    },
+    "instructions": "Display the list of the OSPF neighbors for R1.",
+    "title": "Step 7",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R2# show ip ospf neighbor\n\nNeighbor ID     Pri   State           Dead Time   Address         Interface\n3.3.3.3           1   FULL/DR         00:00:38    10.2.1.3        Ethernet0/2\n1.1.1.1           1   FULL/BDR        00:00:39    10.0.1.1        Ethernet0/0"
+        }
+      ],
+      "text": "On R2, enter the following command:\n\nNotice that the neighbor state for R1 (router ID 1.1.1.1) is \"FULL/BDR,\" indicating that the OSPF adjacency is established and R1 is the BDR router on the link with R2.\n\nYou can also use the same `show ip ospf neighbor` command on R3 to verify that R1 is BDR router on the link with R3."
+    },
+    "instructions": "On R2, display the list of the OSPF neighbors to verify that the neighbor state of R1 is BDR.",
+    "title": "Step 8",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R1# show ip route\nCodes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP\n       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area\n       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2\n       E1 - OSPF external type 1, E2 - OSPF external type 2\n       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2\n       ia - IS-IS inter area, * - candidate default, U - per-user static route\n       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP\n       + - replicated route, % - next hop override\n\nGateway of last resort is not set\n\n      10.0.0.0/8 is variably subnetted, 9 subnets, 2 masks\nC        10.0.1.0/24 is directly connected, Ethernet0/0\nL        10.0.1.1/32 is directly connected, Ethernet0/0\nC        10.1.1.0/24 is directly connected, Ethernet0/1\nL        10.1.1.1/32 is directly connected, Ethernet0/1\nO        10.2.1.0/24 [110/20] via 10.1.1.3, 00:04:50, Ethernet0/1\n                     [110/20] via 10.0.1.2, 00:05:00, Ethernet0/0\nC        10.10.11.0/24 is directly connected, Loopback0\nL        10.10.11.1/32 is directly connected, Loopback0\nO        10.10.12.0/24 [110/11] via 10.0.1.2, 00:05:00, Ethernet0/0\nO        10.10.13.0/24 [110/11] via 10.1.1.3, 00:04:50, Ethernet0/1"
+        }
+      ],
+      "text": "On R1, enter the following command:\n\nThe routes that the router has learned via OSPF are tagged with an \"O\".\n\nIn the lab environment, the loopback IPv4 addresses using /24 prefix on the routers are advertised as /24 networks by OSPF. However, when using the same configuration on real routers, the loopback IPv4 addresses using /24 prefix will be advertised as /32 networks by OSPF because by default loopbacks are always advertised as /32s by OSPF.\n\nR1 has learned the following networks:\n\nThe network between R2 and R3 that has two equal cost paths—via the Ethernet0/0 and Ethernet0/1 interfaces. For both routes to 10.2.1.0/24 network, the parameters in the square brackets are the same. The first parameter has value of 110 and identifies the administrative distance for OSPF, while the second parameter has value of 20 and identifies the total cost of the path. Because both paths are equally good (they have the same cost), they are both included in the routing table and used by R1 when sending traffic to 10.2.1.0/24 network. R1 will send packets on either path; this is called load-balancing.\n\nThe network of the loopback interface on R2; best path is via Ethernet0/0\n\nThe network of the loopback interface on R3; best path is via Ethernet0/1"
+    },
+    "instructions": "Display the routing table on R1.",
+    "notes": [
+      "In the lab environment, the loopback IPv4 addresses using /24 prefix on the routers are advertised as /24 networks by OSPF. However, when using the same configuration on real routers, the loopback IPv4 addresses using /24 prefix will be advertised as /32 networks by OSPF because by default loopbacks are always advertised as /32s by OSPF."
+    ],
+    "title": "Step 9",
+    "type": "Lab Step"
+  },
+  {
+    "title": "OSPF Metric",
+    "type": "Section Title"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R1# show ip ospf interface brief\nInterface    PID   Area            IP Address/Mask    Cost  State Nbrs F/C\nLo0          1     0               10.10.11.1/24      1     LOOP  0/0\nEt0/1        1     0               10.1.1.1/24        10    BDR   1/1\nEt0/0        1     0               10.0.1.1/24        10    BDR   1/1"
+        },
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R1# configure terminal\nR1(config)# interface Ethernet0/0\nR1(config-if)# ip ospf cost 1\nR1(config-if)# end"
+        }
+      ],
+      "text": "First, verify the costs of the Ethernet0/0 and Ethernet0/1 interfaces.\n\nBoth interfaces have the same cost—10. If you want the path via Ethernet0/0 to be chosen, you have to change its cost to a lower value.\n\nAlternatively, you could also change the cost of Ethernet0/1 to a higher value."
+    },
+    "instructions": "R1 has two paths to the 10.2.1.0/24 network, because both paths have equal costs. Influence the interface cost on R1 so that only the path via Ethernet0/0 will be chosen as the best one. Use 1 as the cost parameter.",
+    "title": "Step 10",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R1# show ip route\nCodes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP\n       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area\n       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2\n       E1 - OSPF external type 1, E2 - OSPF external type 2\n       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2\n       ia - IS-IS inter area, * - candidate default, U - per-user static route\n       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP\n       + - replicated route, % - next hop override\n\nGateway of last resort is not set\n\n      10.0.0.0/8 is variably subnetted, 9 subnets, 2 masks\nC        10.0.1.0/24 is directly connected, Ethernet0/0\nL        10.0.1.1/32 is directly connected, Ethernet0/0\nC        10.1.1.0/24 is directly connected, Ethernet0/1\nL        10.1.1.1/32 is directly connected, Ethernet0/1\nO        10.2.1.0/24 [110/11] via 10.0.1.2, 00:00:02, Ethernet0/0\nC        10.10.11.0/24 is directly connected, Loopback0\nL        10.10.11.1/32 is directly connected, Loopback0\nO        10.10.12.0/24 [110/2] via 10.0.1.2, 00:00:02, Ethernet0/0\nO        10.10.13.0/24 [110/11] via 10.1.1.3, 00:06:44, Ethernet0/1"
+        }
+      ],
+      "text": "On R1, enter the following command:\n\nThe total cost to reach the 10.2.1.0/24 network is 11, which is the sum of the costs on all the links to reach the network (including the cost of the links that R2 needs to reach this network).\n\nR1 can reach this network via R2. The cost of the link for R1 to reach R2 is 1 (the cost that you configured).\n\nThe cost of the link for R2 to reach the 10.2.1.0/24 network is 10."
+    },
+    "instructions": "Again, display the routing table of R1. Verify that there is only one path, the path via Ethernet0/0, to reach the 10.2.1.0/24 network.",
+    "title": "Step 11",
+    "type": "Lab Step"
+  },
+  {
+    "title": "Passive Interfaces in OSPF",
+    "type": "Section Title"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R1# configure terminal\nR1(config)# router ospf 1\nR1(config-router)# passive-interface default\n*Oct 13 11:30:01.326: %OSPF-5-ADJCHG: Process 1, Nbr 2.2.2.2 on Ethernet0/0 from FULL to DOWN, Neighbor Down: Interface down or detached\n*Oct 13 11:30:01.326: %OSPF-5-ADJCHG: Process 1, Nbr 3.3.3.3 on Ethernet0/1 from FULL to DOWN, Neighbor Down: Interface down or detached\nR1(config-router)# no passive-interface Ethernet0/1\n*Oct 13 11:31:07.174: %OSPF-5-ADJCHG: Process 1, Nbr 3.3.3.3 on Ethernet0/1 from LOADING to FULL, Loading Done\nR1(config-router)# end"
+        }
+      ],
+      "text": "On R1, enter the following commands:\n\nNote that during configuration, a syslog message indicates that existing adjacencies have been terminated. After you specify that Ethernet0/1 should not be configured as passive, the new adjacency is initiated with R3."
+    },
+    "instructions": "On R1, set all interfaces as passive except the interface that connects to R3. The easiest way is to use the `passive-interface default` command.",
+    "title": "Step 12",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R1# show ip ospf neighbor\n\nNeighbor ID     Pri   State           Dead Time   Address         Interface\n3.3.3.3           1   FULL/DR         00:00:31    10.1.1.3        Ethernet0/1"
+        }
+      ],
+      "text": "On R1, enter the following command:\n\nBecause only Ethernet0/1 has been excluded from the passive interface configuration, R1 has formed an adjacency with R3 only."
+    },
+    "instructions": "Display the list of the OSPF neighbors on R1.",
+    "title": "Step 13",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R1# show ip route\n<--- output omitted --->\nGateway of last resort is not set\n\n      10.0.0.0/8 is variably subnetted, 9 subnets, 2 masks\nC        10.0.1.0/24 is directly connected, Ethernet0/0\nL        10.0.1.1/32 is directly connected, Ethernet0/0\nC        10.1.1.0/24 is directly connected, Ethernet0/1\nL        10.1.1.1/32 is directly connected, Ethernet0/1\nO        10.2.1.0/24 [110/20] via 10.1.1.3, 00:08:27, Ethernet0/1\nC        10.10.11.0/24 is directly connected, Loopback0\nL        10.10.11.1/32 is directly connected, Loopback0\nO        10.10.12.0/24 [110/21] via 10.1.1.3, 00:08:27, Ethernet0/1\nO        10.10.13.0/24 [110/11] via 10.1.1.3, 00:08:27, Ethernet0/1\n"
+        }
+      ],
+      "text": "On R1, enter the following command:\n\nThe routes that the router has learned via OSPF are tagged with an \"O\". Even though all interfaces except Ethernet0/1 are passive for OSPF, R1 still learns the same three networks and uses them in the routing table. This means that R1 will only use the Ethernet0/1 as the exit interface when it sends traffic to 10.2.1.0/24, 10.10.12.0/24 and 10.10.13.0/24 networks."
+    },
+    "instructions": "Display the routing table on R1 and verify the OSPF routes after the configuration changes.",
+    "title": "Step 14",
+    "type": "Lab Step"
+  }
+]

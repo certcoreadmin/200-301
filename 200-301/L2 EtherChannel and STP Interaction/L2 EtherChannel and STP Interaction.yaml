@@ -1,0 +1,606 @@
+# CML 2.8.1+ Compliant Lab Topology
+# Lab: EtherChannel in a Full-Mesh, Multi-VLAN Topology
+
+annotations:
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#808080FF'
+    rotation: 0
+    text_bold: false
+    text_content: 'PC1: 192.168.10.11/24'
+    text_font: monospace
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -470.0
+    y1: -180.0
+    z_index: 0
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#808080FF'
+    rotation: 0
+    text_bold: false
+    text_content: 'PC2: 192.168.10.12/24'
+    text_font: monospace
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: 330.0
+    y1: -180.0
+    z_index: 0
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#808080FF'
+    rotation: 0
+    text_bold: false
+    text_content: 'PC3: 192.168.20.13/24'
+    text_font: monospace
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: 330.0
+    y1: 220.0
+    z_index: 0
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#808080FF'
+    rotation: 0
+    text_bold: false
+    text_content: 'PC4: 192.168.20.14/24'
+    text_font: monospace
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -470.0
+    y1: 220.0
+    z_index: 0
+smart_annotations:
+  - tag: vlan-10
+    is_on: true
+    padding: 35
+    label: VLAN 10 - USERS
+    tag_offset_x: 0
+    tag_offset_y: -15
+    tag_size: 14
+    group_distance: 400
+    thickness: 1
+    border_style: ''
+    fill_color: '#32CD3280'
+    border_color: '#00000080'
+    z_index: 1
+  - tag: vlan-20
+    is_on: true
+    padding: 35
+    label: VLAN 20 - SERVERS
+    tag_offset_x: 0
+    tag_offset_y: 15
+    tag_size: 14
+    group_distance: 400
+    thickness: 1
+    border_style: ''
+    fill_color: '#1E90FF80'
+    border_color: '#00000080'
+    z_index: 1
+nodes:
+  - boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |-
+          hostname SW1
+          no ip domain-lookup
+          spanning-tree vlan 10 root primary
+          spanning-tree vlan 20 root secondary
+          vlan 10
+           name USERS
+          vlan 20
+           name SERVERS
+          vlan 199
+           name NATIVE
+          interface range GigabitEthernet0/0 - 3, GigabitEthernet1/0 - 1
+           switchport mode trunk
+           switchport trunk native vlan 199
+          interface GigabitEthernet1/2
+           switchport access vlan 10
+           spanning-tree portfast
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n0
+    image_definition: null
+    label: SW1
+    node_definition: iosvl2
+    parameters: {}
+    ram: 2048
+    tags: []
+    x: -200
+    y: -200
+    interfaces:
+      - id: i0
+        label: Loopback0
+        mac_address: null
+        type: loopback
+      - id: i1
+        label: GigabitEthernet0/0
+        mac_address: null
+        slot: 0
+        type: physical
+      - id: i2
+        label: GigabitEthernet0/1
+        mac_address: null
+        slot: 1
+        type: physical
+      - id: i3
+        label: GigabitEthernet0/2
+        mac_address: null
+        slot: 2
+        type: physical
+      - id: i4
+        label: GigabitEthernet0/3
+        mac_address: null
+        slot: 3
+        type: physical
+      - id: i5
+        label: GigabitEthernet1/0
+        mac_address: null
+        slot: 4
+        type: physical
+      - id: i6
+        label: GigabitEthernet1/1
+        mac_address: null
+        slot: 5
+        type: physical
+      - id: i7
+        label: GigabitEthernet1/2
+        mac_address: null
+        slot: 6
+        type: physical
+  - boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |-
+          hostname SW2
+          no ip domain-lookup
+          spanning-tree vlan 20 root primary
+          spanning-tree vlan 10 root secondary
+          vlan 10
+           name USERS
+          vlan 20
+           name SERVERS
+          vlan 199
+           name NATIVE
+          interface range GigabitEthernet0/0 - 3, GigabitEthernet1/0 - 1
+           switchport mode trunk
+           switchport trunk native vlan 199
+          interface GigabitEthernet1/2
+           switchport access vlan 10
+           spanning-tree portfast
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n1
+    image_definition: null
+    label: SW2
+    node_definition: iosvl2
+    parameters: {}
+    ram: 2048
+    tags: []
+    x: 200
+    y: -200
+    interfaces:
+      - id: i0
+        label: Loopback0
+        mac_address: null
+        type: loopback
+      - id: i1
+        label: GigabitEthernet0/0
+        mac_address: null
+        slot: 0
+        type: physical
+      - id: i2
+        label: GigabitEthernet0/1
+        mac_address: null
+        slot: 1
+        type: physical
+      - id: i3
+        label: GigabitEthernet0/2
+        mac_address: null
+        slot: 2
+        type: physical
+      - id: i4
+        label: GigabitEthernet0/3
+        mac_address: null
+        slot: 3
+        type: physical
+      - id: i5
+        label: GigabitEthernet1/0
+        mac_address: null
+        slot: 4
+        type: physical
+      - id: i6
+        label: GigabitEthernet1/1
+        mac_address: null
+        slot: 5
+        type: physical
+      - id: i7
+        label: GigabitEthernet1/2
+        mac_address: null
+        slot: 6
+        type: physical
+  - boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |-
+          hostname SW3
+          no ip domain-lookup
+          vlan 10
+           name USERS
+          vlan 20
+           name SERVERS
+          vlan 199
+           name NATIVE
+          interface range GigabitEthernet0/0 - 3, GigabitEthernet1/0 - 1
+           switchport mode trunk
+           switchport trunk native vlan 199
+          interface GigabitEthernet1/2
+           switchport access vlan 20
+           spanning-tree portfast
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n2
+    image_definition: null
+    label: SW3
+    node_definition: iosvl2
+    parameters: {}
+    ram: 2048
+    tags: []
+    x: 200
+    y: 200
+    interfaces:
+      - id: i0
+        label: Loopback0
+        mac_address: null
+        type: loopback
+      - id: i1
+        label: GigabitEthernet0/0
+        mac_address: null
+        slot: 0
+        type: physical
+      - id: i2
+        label: GigabitEthernet0/1
+        mac_address: null
+        slot: 1
+        type: physical
+      - id: i3
+        label: GigabitEthernet0/2
+        mac_address: null
+        slot: 2
+        type: physical
+      - id: i4
+        label: GigabitEthernet0/3
+        mac_address: null
+        slot: 3
+        type: physical
+      - id: i5
+        label: GigabitEthernet1/0
+        mac_address: null
+        slot: 4
+        type: physical
+      - id: i6
+        label: GigabitEthernet1/1
+        mac_address: null
+        slot: 5
+        type: physical
+      - id: i7
+        label: GigabitEthernet1/2
+        mac_address: null
+        slot: 6
+        type: physical
+  - boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |-
+          hostname SW4
+          no ip domain-lookup
+          vlan 10
+           name USERS
+          vlan 20
+           name SERVERS
+          vlan 199
+           name NATIVE
+          interface range GigabitEthernet0/0 - 3, GigabitEthernet1/0 - 1
+           switchport mode trunk
+           switchport trunk native vlan 199
+          interface GigabitEthernet1/2
+           switchport access vlan 20
+           spanning-tree portfast
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n3
+    image_definition: null
+    label: SW4
+    node_definition: iosvl2
+    parameters: {}
+    ram: 2048
+    tags: []
+    x: -200
+    y: 200
+    interfaces:
+      - id: i0
+        label: Loopback0
+        mac_address: null
+        type: loopback
+      - id: i1
+        label: GigabitEthernet0/0
+        mac_address: null
+        slot: 0
+        type: physical
+      - id: i2
+        label: GigabitEthernet0/1
+        mac_address: null
+        slot: 1
+        type: physical
+      - id: i3
+        label: GigabitEthernet0/2
+        mac_address: null
+        slot: 2
+        type: physical
+      - id: i4
+        label: GigabitEthernet0/3
+        mac_address: null
+        slot: 3
+        type: physical
+      - id: i5
+        label: GigabitEthernet1/0
+        mac_address: null
+        slot: 4
+        type: physical
+      - id: i6
+        label: GigabitEthernet1/1
+        mac_address: null
+        slot: 5
+        type: physical
+      - id: i7
+        label: GigabitEthernet1/2
+        mac_address: null
+        slot: 6
+        type: physical
+  - boot_disk_size: null
+    configuration:
+      - name: node.cfg
+        content: |-
+          hostname PC1
+          ip addr add 192.168.10.11/24 dev eth0
+          ip link set dev eth0 up
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n4
+    image_definition: null
+    label: PC1
+    node_definition: alpine
+    parameters: {}
+    ram: null
+    tags:
+      - vlan-10
+    x: -400
+    y: -200
+    interfaces:
+      - id: i0
+        label: eth0
+        mac_address: null
+        slot: 0
+        type: physical
+  - boot_disk_size: null
+    configuration:
+      - name: node.cfg
+        content: |-
+          hostname PC2
+          ip addr add 192.168.10.12/24 dev eth0
+          ip link set dev eth0 up
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n5
+    image_definition: null
+    label: PC2
+    node_definition: alpine
+    parameters: {}
+    ram: null
+    tags:
+      - vlan-10
+    x: 400
+    y: -200
+    interfaces:
+      - id: i0
+        label: eth0
+        mac_address: null
+        slot: 0
+        type: physical
+  - boot_disk_size: null
+    configuration:
+      - name: node.cfg
+        content: |-
+          hostname PC3
+          ip addr add 192.168.20.13/24 dev eth0
+          ip link set dev eth0 up
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n6
+    image_definition: null
+    label: PC3
+    node_definition: alpine
+    parameters: {}
+    ram: null
+    tags:
+      - vlan-20
+    x: 400
+    y: 200
+    interfaces:
+      - id: i0
+        label: eth0
+        mac_address: null
+        slot: 0
+        type: physical
+  - boot_disk_size: null
+    configuration:
+      - name: node.cfg
+        content: |-
+          hostname PC4
+          ip addr add 192.168.20.14/24 dev eth0
+          ip link set dev eth0 up
+    cpu_limit: null
+    cpus: null
+    data_volume: null
+    hide_links: false
+    id: n7
+    image_definition: null
+    label: PC4
+    node_definition: alpine
+    parameters: {}
+    ram: null
+    tags:
+      - vlan-20
+    x: -400
+    y: 200
+    interfaces:
+      - id: i0
+        label: eth0
+        mac_address: null
+        slot: 0
+        type: physical
+links:
+  - id: l0
+    n1: n0
+    n2: n1
+    i1: i1
+    i2: i1
+    conditioning: {}
+    label: SW1-GigabitEthernet0/0<->SW2-GigabitEthernet0/0
+  - id: l1
+    n1: n0
+    n2: n1
+    i1: i2
+    i2: i2
+    conditioning: {}
+    label: SW1-GigabitEthernet0/1<->SW2-GigabitEthernet0/1
+  - id: l2
+    n1: n0
+    n2: n2
+    i1: i3
+    i2: i1
+    conditioning: {}
+    label: SW1-GigabitEthernet0/2<->SW3-GigabitEthernet0/0
+  - id: l3
+    n1: n0
+    n2: n2
+    i1: i4
+    i2: i2
+    conditioning: {}
+    label: SW1-GigabitEthernet0/3<->SW3-GigabitEthernet0/1
+  - id: l4
+    n1: n0
+    n2: n3
+    i1: i5
+    i2: i1
+    conditioning: {}
+    label: SW1-GigabitEthernet1/0<->SW4-GigabitEthernet0/0
+  - id: l5
+    n1: n0
+    n2: n3
+    i1: i6
+    i2: i2
+    conditioning: {}
+    label: SW1-GigabitEthernet1/1<->SW4-GigabitEthernet0/1
+  - id: l6
+    n1: n1
+    n2: n2
+    i1: i3
+    i2: i3
+    conditioning: {}
+    label: SW2-GigabitEthernet0/2<->SW3-GigabitEthernet0/2
+  - id: l7
+    n1: n1
+    n2: n2
+    i1: i4
+    i2: i4
+    conditioning: {}
+    label: SW2-GigabitEthernet0/3<->SW3-GigabitEthernet0/3
+  - id: l8
+    n1: n1
+    n2: n3
+    i1: i5
+    i2: i3
+    conditioning: {}
+    label: SW2-GigabitEthernet1/0<->SW4-GigabitEthernet0/2
+  - id: l9
+    n1: n1
+    n2: n3
+    i1: i6
+    i2: i4
+    conditioning: {}
+    label: SW2-GigabitEthernet1/1<->SW4-GigabitEthernet0/3
+  - id: l10
+    n1: n2
+    n2: n3
+    i1: i5
+    i2: i5
+    conditioning: {}
+    label: SW3-GigabitEthernet1/0<->SW4-GigabitEthernet1/0
+  - id: l11
+    n1: n2
+    n2: n3
+    i1: i6
+    i2: i6
+    conditioning: {}
+    label: SW3-GigabitEthernet1/1<->SW4-GigabitEthernet1/1
+  - id: l12
+    n1: n0
+    n2: n4
+    i1: i7
+    i2: i0
+    conditioning: {}
+    label: SW1-GigabitEthernet1/2<->PC1-eth0
+  - id: l13
+    n1: n1
+    n2: n5
+    i1: i7
+    i2: i0
+    conditioning: {}
+    label: SW2-GigabitEthernet1/2<->PC2-eth0
+  - id: l14
+    n1: n2
+    n2: n6
+    i1: i7
+    i2: i0
+    conditioning: {}
+    label: SW3-GigabitEthernet1/2<->PC3-eth0
+  - id: l15
+    n1: n3
+    n2: n7
+    i1: i7
+    i2: i0
+    conditioning: {}
+    label: SW4-GigabitEthernet1/2<->PC4-eth0
+lab:
+  description: ''
+  notes: ''
+  title: CCNA - Full-Mesh EtherChannel and STP
+  version: 0.3.0

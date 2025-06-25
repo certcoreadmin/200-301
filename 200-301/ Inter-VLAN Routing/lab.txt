@@ -1,0 +1,381 @@
+This lab exercise will guide you through routing between VLANs. The devices are configured as shown in the topology diagram. Currently, devices have IPv4 addresses in the 10.10.1.0/24 or 10.10.2.0/24 subnets. You will start by migrating this configuration to one that uses two VLANs and two physical interfaces on R1 to route between them. You will then continue the migration to implement three VLANs and the use of trunking on R1 to allow one physical interface to have a logical presence on multiple VLANs. In the end, the switches will maintain their IP presence on VLAN 1, PC2 and PC4 will be on VLAN 2, and PC1 and PC3 will move to VLAN 3. R1 will be the default gateway for all hosts, and it will route between the VLANs. The SW1-SW2 link is configured as a trunk, and R1 E0/0 already has IPv4 address.
+
+[
+  {
+    "title": "Include a Router Interface in a VLAN",
+    "type": "Section Title"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW1# show interfaces status\n\nPort      Name               Status       Vlan       Duplex  Speed Type\nEt0/0     Trunk to SW2       connected    trunk        auto   auto unknown\nEt0/1     Link to R1 VLAN 1  connected    1            auto   auto unknown\nEt0/2     Link to R1 VLAN 2  connected    1            auto   auto unknown\nEt0/3                        connected    1            auto   auto unknown\nEt1/0     Link to PC1        connected    1            auto   auto unknown\nEt1/1     Link to PC2        connected    2            auto   auto unknown\nEt1/2                        connected    1            auto   auto unknown\nEt1/3                        connected    1            auto   auto unknown"
+        }
+      ],
+      "text": "Enter the following command to the SW1 switch:\n\nR1 Ethernet0/1 is connected to SW1 Ethernet0/2. Ethernet0/2 is currently in VLAN 1. This means that router R1 has two interfaces connected to ports that have access VLAN set to 1. In other words, router R1 is only part of VLAN 1. Also note that Ethernet 0/0, which is connected to SW2, is a trunk, and Ethernet 1/1, which is connected to PC2, is in VLAN 2."
+    },
+    "instructions": "One way to implement routing between VLANs is to connect physical interfaces on routers to switch access ports that are assigned to the appropriate VLANs. R1 already has its Ethernet0/0 interface connected to a VLAN 1 access port (Ethernet0/1) on SW1. In the following series of steps, you will configure a second physical connection from R1 to an access port on the switch that is in VLAN 2. Access the console of SW1 and verify the current interface status.",
+    "title": "Step 1",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW1# configure terminal\nEnter configuration commands, one per line.  End with CNTL/Z.\nSW1(config)# interface Ethernet 0/2\nSW1(config-if)# switchport mode access\nSW1(config-if)# switchport access vlan 2\nSW1(config-if)# end\nSW1#"
+        }
+      ],
+      "text": "Enter the following commands to the SW1 switch:\n\nBy assigning SW1 port E0/2 to VLAN 2, you have included the router R1 in VLAN 2. It can now act as the default gateway for both VLANs."
+    },
+    "instructions": "Configure SW1 Ethernet0/2 to be an access port that is assigned to VLAN 2.",
+    "title": "Step 2",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R1# configure terminal\nEnter configuration commands, one per line.  End with CNTL/Z.\nR1(config)# interface Ethernet 0/1\nR1(config-if)# ip address 10.10.2.1 255.255.255.0\nR1(config-if)# no shutdown\nR1(config-if)# end\nR1#\n*Oct 30 07:57:23.805: %LINK-3-UPDOWN: Interface Ethernet0/1, changed state to up\n*Oct 30 07:57:24.810: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet0/1, changed state to up"
+        }
+      ],
+      "text": "Enter the following commands to the R1 router:"
+    },
+    "instructions": "Access the R1 console, configure its Ethernet0/1 interface with IPv4 address 10.10.2.1/24, and enable the interface.",
+    "title": "Step 3",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW2# show vlan brief\n\nVLAN Name                             Status    Ports\n---- -------------------------------- --------- -------------------------------\n1    default                          active    Et0/1, Et0/2, Et0/3, Et1/0\n                                                Et1/2, Et1/3\n2    Engineering                      active    Et1/1\n256  NoHosts                          active    \n1002 fddi-default                     act/unsup \n1003 token-ring-default               act/unsup \n1004 fddinet-default                  act/unsup \n1005 trnet-default                    act/unsup\n"
+        },
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "PC4# show cdp neighbors detail\n-------------------------\nDevice ID: SW2\nEntry address(es): \n  IP address: 10.10.1.5\nPlatform: Linux Unix,  Capabilities: Switch IGMP \nInterface: Ethernet0/0,  Port ID (outgoing port): Ethernet1/1\nHoldtime : 158 sec\n\nVersion :\nCisco IOS Software, Solaris Software (I86BI_LINUXL2-ADVENTERPRISEK9-M), Experimental Version 15.1(20130919:231344) [dstivers-sept19-2013pm-team_track 107]\nCopyright (c) 1986-2013 by Cisco Systems, Inc.\nCompiled Thu 19-Sep-13 22:38 by dstivers\n\nadvertisement version: 2\nVTP Management Domain: ''\nNative VLAN: 2\nDuplex: half"
+        }
+      ],
+      "text": "On SW2, enter the following command:\n\nThe output shows that Ethernet1/1 access VLAN is set to 2. Alternatively, because Cisco Discovery Protocol is enabled, you can use the `show cdp neighbors detail` command on PC4 to view SW2 information."
+    },
+    "instructions": "R1 can now act as a gateway for VLAN 2. Before you configure R1 as the default gateway for PC4, verify that PC4 belongs to the same VLAN 2. According to the topology diagram, PC4 is connected to SW2 Ethernet 1/1 interface. Examine the VLAN information summary on SW2 to verify interface VLAN assignment.",
+    "title": "Step 4",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "PC4# configure terminal\nEnter configuration commands, one per line.  End with CNTL/Z.\nPC4(config)# ip default-gateway 10.10.2.1\nPC4(config)# end\nPC4#\n"
+        }
+      ],
+      "text": "On PC4, enter the following command:\n\nThe default gateway IPv4 address and the host IPv4 address must belong to the same subnet."
+    },
+    "instructions": "On PC4, configure router R1’s VLAN 2 IPv4 address 10.10.2.1 as the default gateway and exit to the privileged EXEC mode.",
+    "title": "Step 5",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "PC4# ping 10.10.1.10\nType escape sequence to abort.\nSending 5, 100-byte ICMP Echos to 10.10.1.10, timeout is 2 seconds:\n.!!!!\nSuccess rate is 80 percent (4/5), round-trip min/avg/max = 1/1/1 ms"
+        }
+      ],
+      "text": "Enter the following command to PC4:\n\nRefer to the topology diagram to understand the physical path from PC4 to PC1. The VLAN 2 path starts at PC4 and proceeds to SW2. Then, it crosses the trunk link to SW1 and continues up to the R1 Ethernet0/1 interface. R1 performs the route forwarding to VLAN 1. It sends the packet out of its Ethernet0/0 interface back to SW1 on VLAN 1, and then SW1 delivers the packet to PC1."
+    },
+    "instructions": "Verify that PC4 can now reach hosts on VLAN 1 by pinging PC1 (10.10.1.10).",
+    "title": "Step 6",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "PC2# show cdp neighbors detail\n-------------------------\nDevice ID: SW1\nEntry address(es): \n  IP address: 10.10.1.4\nPlatform: Linux Unix,  Capabilities: Switch IGMP \nInterface: Ethernet0/0,  Port ID (outgoing port): Ethernet1/1\nHoldtime : 149 sec\n\nVersion :\nCisco IOS Software, Solaris Software (I86BI_LINUXL2-ADVENTERPRISEK9-M), Experimental Version 15.1(20130919:231344) [dstivers-sept19-2013pm-team_track 107]\nCopyright (c) 1986-2013 by Cisco Systems, Inc.\nCompiled Thu 19-Sep-13 22:38 by dstivers\n\nadvertisement version: 2\nVTP Management Domain: ''\nNative VLAN: 2\nDuplex: half"
+        }
+      ],
+      "text": "On PC2, enter the following command:\n\nPC2 is already configured in VLAN 2."
+    },
+    "instructions": "According to the topology diagram, PC2 is also in VLAN 2. Before you configure the default gateway on PC2, verify that it belongs to VLAN 2. All devices have Cisco Discovery Protocol enabled. Use the information obtained by the Cisco Discovery Protocol to verify VLAN configuration.",
+    "title": "Step 7",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "PC2# configure terminal\nEnter configuration commands, one per line.  End with CNTL/Z.\nPC2(config)# ip default-gateway 10.10.2.1\nPC2(config)# end\nPC2#"
+        }
+      ],
+      "text": "On PC2, enter the following command:"
+    },
+    "instructions": "Configure the default gateway on PC2.",
+    "title": "Step 8",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "PC2# ping 10.10.1.30\nType escape sequence to abort.\nSending 5, 100-byte ICMP Echos to 10.10.1.30, timeout is 2 seconds:\n.!!!!\nSuccess rate is 80 percent (4/5), round-trip min/avg/max = 1/1/1 ms"
+        }
+      ],
+      "text": "Enter the following command to PC2:\n\nThere is connectivity between PC2 and PC3. Consulting the topology diagram, trace the path between PC2 and PC3. Remember that a device with the routing function must be in the path, since PC2 and PC3 are not in the same subnets and VLANs."
+    },
+    "instructions": "Verify that PC2, which is connected to VLAN 2 on SW1, can reach hosts that are connected to VLAN 1 on SW2. Ping PC3 (10.10.1.30). The attempt should succeed.",
+    "title": "Step 9",
+    "type": "Lab Step"
+  },
+  {
+    "description": "Note: This next video starts at the point where VLAN 3 has already been configured.\n\nIn the next series of steps, you will add a third VLAN. You will leave the switch management IPv4 addresses in VLAN 1 but all PCs will be distributed between VLAN 2 and VLAN 3. There are not enough physical interfaces available on R1 to connect to all the three VLANs individually. Therefore, you need to configure one of the router R1 physical interfaces, Ethernet 0/1, as a trunk to allow it to have a logical connection to multiple VLANs.\n\nIn this lab, only VLAN 2 and VLAN 3 will be configured on the router’s trunk interface Ethernet 0/1. The Ethernet 0/0 interface will remain in VLAN 1. In a real environment, you would configure all required VLANs to the trunk.",
+    "title": "Configure a Router with a Trunk Link",
+    "type": "Section Title"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW1# configure terminal\nEnter configuration commands, one per line.  End with CNTL/Z.\nSW1(config)# vlan 3\nSW1(config-vlan)# name Marketing\nSW1(config-vlan)# exit"
+        }
+      ],
+      "text": "On SW1, enter the following commands:"
+    },
+    "instructions": "Start by accessing the SW1 console and creating VLAN 3, assigning it the name \"Marketing,\" and then return to the Global Configuration mode.",
+    "title": "Step 10",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW1(config)# interface Ethernet 1/0\nSW1(config-if)# switchport mode access\nSW1(config-if)# switchport access vlan 3\nSW1(config-if)# end\nSW1#"
+        }
+      ],
+      "text": "On SW1, enter the following command:"
+    },
+    "instructions": "Configure the port connecting to PC1 as an access interface, and assign it to VLAN 3.",
+    "title": "Step 11",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW1# show vlan id 3\n\nVLAN Name                             Status    Ports\n---- -------------------------------- --------- -------------------------------\n3    Marketing                        active    Et0/0, Et1/0\n\nVLAN Type  SAID       MTU   Parent RingNo BridgeNo Stp  BrdgMode Trans1 Trans2\n---- ----- ---------- ----- ------ ------ -------- ---- -------- ------ ------\n3    enet  100003     1500  -      -      -        -    -        0      0\n\nPrimary Secondary Type              Ports\n------- --------- ----------------- ------------------------------------------"
+        }
+      ],
+      "text": "On SW1, enter the following command:\n\nThe output shows two ports are in VLAN 3. Ethernet 1/0 is the access interface that you just configured. Ethernet 0/0 is the trunk interface towards SW2, which was preconfigured for the lab. VLAN 3 is allowed on the trunk."
+    },
+    "instructions": "Verify the configuration of VLAN 3 on SW1.",
+    "title": "Step 12",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "PC1# configure terminal\nEnter configuration commands, one per line.  End with CNTL/Z.\nPC1(config)# interface Ethernet 0/0\nPC1(config-if)# ip address 10.10.3.10 255.255.255.0\nPC1(config-if)# exit\nPC1(config)# ip default-gateway 10.10.3.1\nPC1(config)# end\nPC1#"
+        }
+      ],
+      "text": "On PC1, enter the following commands:"
+    },
+    "instructions": "Access the console of PC1 and configure its IPv4 address and default gateway. Both addresses must belong to the same subnet, the subnet allocated for VLAN 3, which is 10.10.3.0/24. For PC1, use the IPv4 address 10.10.3.10/24. For the default gateway, use the IPv4 address 10.10.3.1/24.",
+    "title": "Step 13",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW2# configure terminal\nEnter configuration commands, one per line.  End with CNTL/Z.\nSW2(config)# vlan 3\nSW2(config-vlan)# name Marketing\nSW2(config-vlan)# exit\nSW2(config)# interface Ethernet 1/0\nSW2(config-if)# switchport mode access\nSW2(config-if)# switchport access vlan 3\nSW2(config-if)# end\nSW2#"
+        }
+      ],
+      "text": "On SW2, enter the following commands:"
+    },
+    "instructions": "Access the console of SW2 and create VLAN 3, as you did on SW1. Assign the port connecting PC3 as an access interface, and assign it to VLAN 3.",
+    "title": "Step 14",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW2# show interfaces Ethernet1/0 status\n\nPort      Name               Status       Vlan       Duplex  Speed Type\nEt1/0     Link to PC3        connected    3            auto   auto unknown"
+        }
+      ],
+      "text": "On SW2, enter the following command:\n\nThe output shows that Ethernet 1/0 interface is in VLAN 3."
+    },
+    "instructions": "Verify the status of the Ethernet1/0 interface on SW2.",
+    "title": "Step 15",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW2# show vlan id 3\n\nVLAN Name                             Status    Ports\n---- -------------------------------- --------- -------------------------------\n3    Marketing                        active    Et0/0, Et1/0\n\nVLAN Type  SAID       MTU   Parent RingNo BridgeNo Stp  BrdgMode Trans1 Trans2\n---- ----- ---------- ----- ------ ------ -------- ---- -------- ------ ------\n3    enet  100003     1500  -      -      -        -    -        0      0\n\nPrimary Secondary Type              Ports\n------- --------- ----------------- ------------------------------------------"
+        }
+      ],
+      "text": "On SW2, enter the following command:\n\nThe output shows two ports are in VLAN 3. Ethernet 1/0 is the access interface that you just configured. Ethernet 0/0 is the trunk interface towards SW1, which was preconfigured for the lab. VLAN 3 is allowed on the trunk."
+    },
+    "instructions": "Verify the configuration of VLAN 3 on SW2.",
+    "title": "Step 16",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "PC3# configure terminal\nEnter configuration commands, one per line.  End with CNTL/Z.\nPC3(config)# interface Ethernet 0/0\nPC3(config-if)# ip address 10.10.3.30 255.255.255.0\nPC3(config-if)# exit\nPC3(config)# ip default-gateway 10.10.3.1\nPC3(config)# end\nPC3#"
+        }
+      ],
+      "text": "On PC3, enter the following command:\n\nNote that although you configured the PC1 and PC3 with the default gateway, you have not yet configured 10.10.3.1/24 IPv4 address on the router."
+    },
+    "instructions": "Access the console of PC3 and configure its IPv4 address and default gateway. Both addresses must belong to the same subnet, the subnet that is allocated for VLAN 3.  For PC3 use the IPv4 address 10.10.3.30/24.",
+    "title": "Step 17",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "PC3# ping 10.10.3.10\nType escape sequence to abort.\nSending 5, 100-byte ICMP Echos to 10.10.3.10, timeout is 2 seconds:\n.!!!!\nSuccess rate is 80 percent (4/5), round-trip min/avg/max = 1/1/1 ms"
+        }
+      ],
+      "text": "On PC3, enter the following command:"
+    },
+    "instructions": "PC3 and PC1 are now correctly configured. The switch ports that they are connected to are assigned to VLAN 3. Verify that there is connectivity between them.",
+    "title": "Step 18",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW1# configure terminal\nEnter configuration commands, one per line.  End with CNTL/Z.\nSW1(config)# interface Ethernet 0/2\nSW1(config-if)# switchport trunk encapsulation dot1q\nSW1(config-if)# switchport trunk native vlan 256\nSW1(config-if)# switchport trunk allowed vlan 2,3\nSW1(config-if)# switchport mode trunk\nSW1(config-if)# end\nSW1#\n*Oct 30 09:55:41.399: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet0/2, changed state to down\n*Oct 30 09:55:44.049: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet0/2, changed state to up"
+        }
+      ],
+      "text": "On SW1, enter the following commands:\n\nNote that if you do not allow specific VLANs on the trunk, the default configuration allows all VLANs."
+    },
+    "instructions": "Use the R1 Ethernet0/1 to SW1 Ethernet0/2 connection as a trunk for VLANs 2 and 3. To prepare for the trunk port configuration on R1, you must configure SW1 Ethernet0/2 as a trunk port. Only two VLANs will be configured on the interface. Configure Ethernet0/2 on SW1 as a trunk with native VLAN 256 and 802.1Q encapsulation; VLAN 256 is already configured on SW1.\n\nOnly two VLANs will be configured on a single interface.",
+    "title": "Step 19",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R1# configure terminal\nEnter configuration commands, one per line.  End with CNTL/Z.\nR1(config)# interface Ethernet0/1\nR1(config-if)# no ip address"
+        }
+      ],
+      "text": "On R1, enter the following commands:"
+    },
+    "instructions": "Now, configure Ethernet 0/1 interface on R1 so that it connects to both VLAN 2 and VLAN 3. First, remove the IPv4 address that is currently configured on R1 Ethernet 0/1 physical interface.",
+    "title": "Step 20",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R1(config-if)# interface Ethernet 0/1.2\nR1(config-subif)# encapsulation dot1q 2\nR1(config-subif)# ip address 10.10.2.1 255.255.255.0"
+        }
+      ],
+      "text": "On R1, enter the following commands:\n\nIn this example, the subinterface number (.2), the VLAN ID (2), and the third octet of the IPv4 address (2) are all consistent with each other. This practice is common, but it is not a technical requirement."
+    },
+    "instructions": "To accommodate two VLANs and their two subnets, create two logical subinterfaces, one for each VLAN, of the Ethernet 0/1 interface. First, create the logical Ethernet0/1.2 subinterface, assign it to VLAN 2, and configure it with the appropriate IPv4 address that is given in the Device Information table.",
+    "title": "Step 21",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R1(config-subif)# interface Ethernet 0/1.3\nR1(config-subif)# encapsulation dot1q 3\nR1(config-subif)# ip address 10.10.3.1 255.255.255.0\nR1(config-subif)# end\nR1#"
+        }
+      ],
+      "text": "On R1, enter the following commands:"
+    },
+    "instructions": "Create the logical Ethernet0/1.3 subinterface, assign it to VLAN 3, and configure it with the appropriate IPv4 address. Leave the configuration mode when you are done.",
+    "title": "Step 22",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "R1# ping 10.10.3.10\nType escape sequence to abort.\nSending 5, 100-byte ICMP Echos to 10.10.3.10, timeout is 2 seconds:\n..!!!\nSuccess rate is 60 percent (3/5), round-trip min/avg/max = 1/1/1 ms\nR1# ping 10.10.2.20\nType escape sequence to abort.\nSending 5, 100-byte ICMP Echos to 10.10.2.20, timeout is 2 seconds:\n..!!!\nSuccess rate is 80 percent (4/5), round-trip min/avg/max = 1/1/1 ms\nR1# ping 10.10.3.30\nType escape sequence to abort.\nSending 5, 100-byte ICMP Echos to 10.10.3.30, timeout is 2 seconds:\n.!!!!\nSuccess rate is 60 percent (3/5), round-trip min/avg/max = 1/1/1 ms\nR1# ping 10.10.2.40\nType escape sequence to abort.\nSending 5, 100-byte ICMP Echos to 10.10.2.40, timeout is 2 seconds:\n.!!!\nSuccess rate is 80 percent (4/5), round-trip min/avg/max = 1/1/1 ms"
+        }
+      ],
+      "text": "On R1, enter the following commands:"
+    },
+    "instructions": "If everything was configured successfully, R1 should have connectivity to devices in both VLAN 2 and VLAN 3. Verify this connectivity from the router to all PCs. All verifications should be successful.",
+    "title": "Step 23",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "PC1# ping 10.10.2.20\nType escape sequence to abort.\nSending 5, 100-byte ICMP Echos to 10.10.2.20, timeout is 2 seconds:\n!!!!!\nSuccess rate is 100 percent (5/5), round-trip min/avg/max = 1/1/1 ms"
+        }
+      ],
+      "text": "On PC1, enter the following command:"
+    },
+    "instructions": "Verify that the PCs can also reach each other. From PC1 verify connectivity to PC2.",
+    "title": "Step 24",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "PC1# traceroute 10.10.2.20\nType escape sequence to abort.\nTracing the route to 10.10.2.20\nVRF info: (vrf in name/id, vrf out name/id)\n  1 10.10.3.1 0 msec 0 msec 0 msec\n  2 10.10.2.20 0 msec *  1 msec"
+        }
+      ],
+      "text": "On PC1, enter the following command:"
+    },
+    "instructions": "Verify that R1 is in the path between PC1 and PC2 using the `traceroute` command.",
+    "title": "Step 25",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "PC1# ping 10.10.1.4\nType escape sequence to abort.\nSending 5, 100-byte ICMP Echos to 10.10.1.4, timeout is 2 seconds:\n!!!!!\nSuccess rate is 80 percent (4/5), round-trip min/avg/max = 1/1/1 ms\nPC1# ping 10.10.1.5\nType escape sequence to abort.\nSending 5, 100-byte ICMP Echos to 10.10.1.5, timeout is 2 seconds:\n!!!!!\nSuccess rate is 80 percent (4/5), round-trip min/avg/max = 1/1/1 ms"
+        }
+      ],
+      "text": "On PC1, enter the following command:"
+    },
+    "instructions": "Also verify that PC1 can still reach the switch management IPv4 addresses that remain in VLAN 1. Ping 10.10.1.4 and 10.10.1.5. Both attempts should succeed.",
+    "title": "Step 26",
+    "type": "Lab Step"
+  }
+]

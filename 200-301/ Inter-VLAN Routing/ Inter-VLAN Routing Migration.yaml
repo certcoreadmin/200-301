@@ -1,0 +1,336 @@
+# CML 2.8.1+ Lab File for CCNA Inter-VLAN Routing Migration
+# This file defines the lab topology, device configurations, and links.
+annotations:
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#808080FF'
+    rotation: 0
+    text_bold: false
+    text_content: 'VLAN 10: 10.10.10.0/24 (Management)'
+    text_font: monospace
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -600.0
+    y1: -150.0
+    z_index: 0
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#808080FF'
+    rotation: 0
+    text_bold: false
+    text_content: 'VLAN 20: 10.10.20.0/24 (Engineering)'
+    text_font: monospace
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -600.0
+    y1: -130.0
+    z_index: 0
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#808080FF'
+    rotation: 0
+    text_bold: false
+    text_content: 'VLAN 30: 10.10.30.0/24 (Marketing)'
+    text_font: monospace
+    text_italic: false
+    text_size: 12
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -600.0
+    y1: -110.0
+    z_index: 0
+smart_annotations: []
+nodes:
+  - id: n0
+    boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |
+          hostname R1
+          no ip domain-lookup
+          line con 0
+           logging synchronous
+          !
+    cpus: 1
+    image_definition: iosv
+    interfaces:
+      - id: i0
+        label: GigabitEthernet0/0
+        mac_address: null
+        slot: 0
+        type: physical
+      - id: i1
+        label: GigabitEthernet0/1
+        mac_address: null
+        slot: 1
+        type: physical
+      - id: i2
+        label: GigabitEthernet0/2
+        mac_address: null
+        slot: 2
+        type: physical
+      - id: i3
+        label: GigabitEthernet0/3
+        mac_address: null
+        slot: 3
+        type: physical
+    label: R1
+    node_definition: iosv
+    ram: 2048
+    x: -300
+    y: -200
+  - id: n1
+    boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |
+          hostname SW1
+          no ip domain-lookup
+          line con 0
+           logging synchronous
+          !
+    cpus: 1
+    image_definition: iosvl2
+    interfaces:
+      - id: i0
+        label: GigabitEthernet0/0
+        mac_address: null
+        slot: 0
+        type: physical
+      - id: i1
+        label: GigabitEthernet0/1
+        mac_address: null
+        slot: 1
+        type: physical
+      - id: i2
+        label: GigabitEthernet0/2
+        mac_address: null
+        slot: 2
+        type: physical
+      - id: i3
+        label: GigabitEthernet0/3
+        mac_address: null
+        slot: 3
+        type: physical
+      - id: i4
+        label: GigabitEthernet1/0
+        mac_address: null
+        slot: 4
+        type: physical
+      - id: i5
+        label: GigabitEthernet1/1
+        mac_address: null
+        slot: 5
+        type: physical
+      - id: i6
+        label: GigabitEthernet1/2
+        mac_address: null
+        slot: 6
+        type: physical
+      - id: i7
+        label: GigabitEthernet1/3
+        mac_address: null
+        slot: 7
+        type: physical
+    label: SW1
+    node_definition: iosvl2
+    ram: 2048
+    x: -300
+    y: 0
+  - id: n2
+    boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |
+          hostname SW2
+          no ip domain-lookup
+          line con 0
+           logging synchronous
+          !
+    cpus: 1
+    image_definition: iosvl2
+    interfaces:
+      - id: i0
+        label: GigabitEthernet0/0
+        mac_address: null
+        slot: 0
+        type: physical
+      - id: i1
+        label: GigabitEthernet0/1
+        mac_address: null
+        slot: 1
+        type: physical
+      - id: i2
+        label: GigabitEthernet0/2
+        mac_address: null
+        slot: 2
+        type: physical
+      - id: i3
+        label: GigabitEthernet0/3
+        mac_address: null
+        slot: 3
+        type: physical
+      - id: i4
+        label: GigabitEthernet1/0
+        mac_address: null
+        slot: 4
+        type: physical
+      - id: i5
+        label: GigabitEthernet1/1
+        mac_address: null
+        slot: 5
+        type: physical
+      - id: i6
+        label: GigabitEthernet1/2
+        mac_address: null
+        slot: 6
+        type: physical
+      - id: i7
+        label: GigabitEthernet1/3
+        mac_address: null
+        slot: 7
+        type: physical
+    label: SW2
+    node_definition: iosvl2
+    ram: 2048
+    x: 0
+    y: 0
+  - id: n3
+    boot_disk_size: null
+    configuration:
+      - name: node.cfg
+        content: |+
+          hostname PC1
+          ip addr add 10.10.1.10/24 dev eth0
+          ip link set dev eth0 up
+    cpus: 1
+    image_definition: alpine
+    interfaces:
+      - id: i0
+        label: eth0
+        mac_address: null
+        slot: 0
+        type: physical
+    label: PC1
+    node_definition: alpine
+    ram: 1024
+    x: -500
+    y: 150
+  - id: n4
+    boot_disk_size: null
+    configuration:
+      - name: node.cfg
+        content: |+
+          hostname PC2
+          ip addr add 10.10.1.11/24 dev eth0
+          ip link set dev eth0 up
+    cpus: 1
+    image_definition: alpine
+    interfaces:
+      - id: i0
+        label: eth0
+        mac_address: null
+        slot: 0
+        type: physical
+    label: PC2
+    node_definition: alpine
+    ram: 1024
+    x: -100
+    y: 150
+  - id: n5
+    boot_disk_size: null
+    configuration:
+      - name: node.cfg
+        content: |+
+          hostname PC3
+          ip addr add 10.10.1.12/24 dev eth0
+          ip link set dev eth0 up
+    cpus: 1
+    image_definition: alpine
+    interfaces:
+      - id: i0
+        label: eth0
+        mac_address: null
+        slot: 0
+        type: physical
+    label: PC3
+    node_definition: alpine
+    ram: 1024
+    x: 200
+    y: 150
+  - id: n6
+    boot_disk_size: null
+    configuration:
+      - name: node.cfg
+        content: |+
+          hostname PC4
+          ip addr add 10.10.1.13/24 dev eth0
+          ip link set dev eth0 up
+    cpus: 1
+    image_definition: alpine
+    interfaces:
+      - id: i0
+        label: eth0
+        mac_address: null
+        slot: 0
+        type: physical
+    label: PC4
+    node_definition: alpine
+    ram: 1024
+    x: 400
+    y: 150
+links:
+  - id: l0
+    i1: i0
+    i2: i3
+    label: R1-Gi0/0 <--> SW1-Gi0/3
+    n1: n0
+    n2: n1
+  - id: l1
+    i1: i1
+    i2: i5
+    label: R1-Gi0/1 <--> SW1-Gi1/1
+    n1: n0
+    n2: n1
+  - id: l2
+    i1: i4
+    i2: i4
+    label: SW1-Gi1/0 <--> SW2-Gi1/0
+    n1: n1
+    n2: n2
+  - id: l3
+    i1: i1
+    i2: i0
+    label: SW1-Gi0/1 <--> PC1
+    n1: n1
+    n2: n3
+  - id: l4
+    i1: i2
+    i2: i0
+    label: SW1-Gi0/2 <--> PC2
+    n1: n1
+    n2: n4
+  - id: l5
+    i1: i1
+    i2: i0
+    label: SW2-Gi0/1 <--> PC3
+    n1: n2
+    n2: n5
+  - id: l6
+    i1: i2
+    i2: i0
+    label: SW2-Gi0/2 <--> PC4
+    n1: n2
+    n2: n6
+lab:
+  title: CCNA - Inter-VLAN Routing Migration
+  notes: ''
+  version: "0.3.0"
+  timestamp: "2024-05-18T12:00:00.000Z"

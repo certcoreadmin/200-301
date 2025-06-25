@@ -1,0 +1,249 @@
+The purpose of this activity is to provide you with some experience working with EtherChannel. The live virtual lab is prepared with the switches represented in the topology diagram and the connectivity table. All devices have their basic configurations in place, including hostnames and IPv4 addresses. Note that all the links between the switches use pairs of connections. You will see that this fact does not lead to doubling of the bandwidth by default. You will configure EtherChannel on some of the links, examine how link aggregation affects STP topology for one of the VLANs, and verify the EtherChannel configuration.
+
+
+
+[
+  {
+    "description": "Complete the following steps:",
+    "title": "Configure and Verify EtherChannel",
+    "type": "Section Title"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW1# show interfaces status\n\nPort      Name               Status       Vlan       Duplex  Speed Type\nEt0/0     Link to SW4        connected    trunk        auto   auto unknown\nEt0/1     Link to SW4        connected    trunk        auto   auto unknown\nEt0/2     Link to SW3        connected    trunk        auto   auto unknown\nEt0/3     Link to SW3        connected    trunk        auto   auto unknown\nEt1/0     Link to PC1        connected    10           auto   auto unknown\nEt1/1                        disabled     1            auto   auto unknown\nEt1/2                        disabled     1            auto   auto unknown\nEt1/3                        disabled     1            auto   auto unknown "
+        }
+      ],
+      "text": "On SW1, enter the following command:\n\nEthernet0/2 and Ethernet 0/3, which are connected to SW3 are trunk interfaces. Trunking is configured with the native VLAN set to VLAN 99.\n\nEthernet1/0 is an access interface, assigned to VLAN 10.\n\nEthernet 0/0 and Ethernet 0/1 are also trunk interfaces. They are connected to SW4 switch, and configured with the native VLAN set to VLAN 99.\n\nInterfaces Ethernet 1/1, Ethernet 1/2, and Ethernet 1/3 are not in use and are disabled."
+    },
+    "instructions": "Start by accessing the console of SW1 and displaying the interface status summary on SW1.",
+    "title": "Step 1",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW1# show spanning-tree vlan 10\n\nVLAN0010\n  Spanning tree enabled protocol ieee\n  Root ID    Priority    24586\n             Address     aabb.cc00.0d00\n             Cost        100\n             Port        3 (Ethernet0/2)\n             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec\n\n  Bridge ID  Priority    32778  (priority 32768 sys-id-ext 10)\n             Address     aabb.cc00.0b00\n             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec\n             Aging Time  300 sec\n\nInterface           Role Sts Cost      Prio.Nbr Type\n------------------- ---- --- --------- -------- --------------------------------\nEt0/0               Altn BLK 100       128.1    Shr\nEt0/1               Altn BLK 100       128.2    Shr\nEt0/2               Root FWD 100       128.3    Shr\nEt0/3               Altn BLK 100       128.4    Shr\nEt1/0               Desg FWD 100       128.5    Shr"
+        },
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW3# show spanning-tree vlan 10\n\nVLAN0010\n  Spanning tree enabled protocol ieee\n  Root ID    Priority    24586\n             Address     aabb.cc01.2100\n             This bridge is the root\n             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec\n\n  Bridge ID  Priority    24586  (priority 24576 sys-id-ext 10)\n             Address     aabb.cc01.2100\n             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec\n             Aging Time  300 sec\n\nInterface           Role Sts Cost      Prio.Nbr Type\n------------------- ---- --- --------- -------- --------------------------------\nEt0/0               Desg FWD 100       128.1    Shr \nEt0/1               Desg FWD 100       128.2    Shr \nEt0/2               Desg FWD 100       128.3    Shr \nEt0/3               Desg FWD 100       128.4    Shr \nEt1/0               Desg FWD 100       128.5    Shr \nEt1/2               Desg FWD 100       128.7    Shr \nEt1/3               Desg FWD 100       128.8    Shr "
+        }
+      ],
+      "text": "On SW1, enter the following command:\n\nThe MAC addresses might differ in your output.\n\nThe output you are seeing displays STP-related information for VLAN 10. The VLAN0010 ‘title’ indicates that you are seeing STP information only for VLAN 10, which is named VLAN0010.\n\nThe first part of the output provides two blocks of similar information. The first block gives information about the root switch and the second block gives information about the switch you are administering. The STP information for the root switch provides the STP priority and MAC address, the STP cost to the root switch, root port identifier (on your switch), and  the STP timers. When the switch you are administering is the root switch, in place of the cost and port identifier, you will see the phrase T**his bridge is the root**. As you can see from the output, SW1 is not the root switch.\n\nThe second block of information provides STP priority and MAC address, STP timers, and aging time for the switch you are administering.\n\nThe second part of the output is the table showing interface STP information, in particular STP role, STP status, STP cost, STP interface priority, and STP type, for all interfaces that are part of the VLAN that you specified in the command.\n\nBoth Eternet0/2 and 0/3 connect to SW3, but only Ethernet0/2 is forwarding traffic. The STP is blocking Ethernet0/3 to prevent a loop. Only half of the potential bandwidth in this pair of links is in use. Ethernet 0/0 and Ethernet 0/1 interfaces are both in the blocking state. They are not forwarding traffic. All interfaces have STP cost of 100.\n\nTo determine the resulting STP topology for VLAN 10, you need to examine the STP information on other switches also.\n\nTo identify the root switch in the topology, follow the direction in which the Root  port is facing. In this case, the Root port is Etherent0/2 facing toward SW3. On SW3, enter the `show spanning-tree vlan` 10 command.\n\nNotice the previously mentioned **This bridge is the root** message—you have discovered the root switch. Also notice that none of the interfaces have the Root role, they are all designated ports, which is another indicator that you have discovered the root switch.\n\nAfter you examine STP information for VLAN 10 on all the switches, the resulting topology should look like the one in the following figure.\n\nAlso, examine the STP configuration for other VLANs and determine the STP topology for VLAN 20 and VLAN 1. For your reference, these two STP topologies are also shown below."
+    },
+    "instructions": "Examine the topology. Switches are interconnected with multiple trunk connections. There are many physical loops in the topology. To understand what the topology is, after the STP performs its processing, you need to examine the STP information on the switches. You need to establish what the resulting topology is for each VLAN after STP calculations. To begin, display the spanning tree information for VLAN 10 on SW1. To view STP information, use the `show spanning-tree` command. To view STP information for a specific VLAN, use the `show spanning-tree vlan` `vlan-id` command with the appropriate VLAN identifier. Display the spanning tree information for VLAN 10 on the other switches to complete your understanding of the VLAN 10 topology. Then examine the STP configuration for VLANs 20 and 1, to determine the STP topology for these VLANs.",
+    "notes": [
+      "The MAC addresses might differ in your output."
+    ],
+    "title": "Step 2",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW1# configure terminal\nEnter configuration commands, one per line. End with CNTL/Z.\nSW1(config)# interface range Ethernet0/2 - 3\nSW1(config-if-range)# shutdown\n*Dec 28 09:09:31.692: %LINK-5-CHANGED: Interface Ethernet0/2, changed state to administratively down\n*Dec 28 09:09:31.693: %LINK-5-CHANGED: Interface Ethernet0/3, changed state to administratively down\n*Dec 28 09:09:32.693: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet0/2, changed state to down\n*Dec 28 09:09:32.694: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet0/3, changed state to down"
+        }
+      ],
+      "text": "On SW1, enter the following commands:\n\nHaving interfaces disabled while you are configuring them ensures that the incomplete configuration will not create activity on the link."
+    },
+    "instructions": "To better utilize the links between the SW1 and SW3 switches, you will aggregate them into a Layer 2 EtherChannel link. Start the configuration by shutting down interfaces Ethernet0/2 and Ethernet0/3 on the SW1 switch. Disable both interfaces at the same time.",
+    "title": "Step 3",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW3# configure terminal\nEnter configuration commands, one per line. End with CNTL/Z.\nSW3(config)# interface range Ethernet0/2 - 3\nSW3(config-if-range)# shutdown\n*Dec 28 09:10:17.356: %LINK-5-CHANGED: Interface Ethernet0/2, changed state to administratively down\n*Dec 28 09:10:17.356: %LINK-5-CHANGED: Interface Ethernet0/3, changed state to administratively down\nSW3(config-if-range)#\n*Dec 28 09:10:18.360: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet0/2, changed state to down\n*Dec 28 09:10:18.360: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet0/3, changed state to down"
+        }
+      ],
+      "text": "On SW3, enter the following commands:"
+    },
+    "instructions": "Shut down interfaces Ethernet0/2 and Ethernet0/3 on switch SW3.",
+    "title": "Step 4",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW1(config-if-range)# channel-group 1 mode active\nCreating a port-channel interface Port-channel 1\nSW1(config-if-range)# "
+        }
+      ],
+      "text": "On SW1, enter the following commands:"
+    },
+    "instructions": "On SW1, bundle Ethernet0/2 and Ethernet 0/3 interfaces to the logical interface port-channel 1. The aggregation should be negotiated by the LACP protocol.",
+    "title": "Step 5",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW3(config-if-range)# channel-group 1 mode active\nCreating a port-channel interface Port-channel 1\nSW3(config-if-range)#"
+        }
+      ],
+      "text": "On SW3, enter the following commands:\n\nNote that you have configured both sides of the links to be in the LACP active state, which means to actively negotiate link aggregation. For successful aggregation, it would be enough to have only one side operating in the LACP active mode; the other could be configured to be in passive mode."
+    },
+    "instructions": "On SW3, bundle Ethernet0/2 and Ethernet 0/3 to logical interface port channel 1 using the LACP protocol active mode.",
+    "title": "Step 6",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW1(config-if-range)# no shutdown"
+        }
+      ],
+      "text": "On SW1, enter the following commands:"
+    },
+    "instructions": "Ethernet 0/2 and Ethernet 0/3 interfaces on both switches have a matching configuration regarding the following: speed and duplex attributes, switchport mode set to trunk, native VLAN, and all allowed VLANs on the trunk. Thus, the preconditions for successful establishment of the EtherChannel link are fulfilled. You can enable interfaces Ethernet0/2 and Ethernet0/3 on switch SW1.",
+    "title": "Step 7",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW3(config-if-range)# no shutdown\n*Dec 28 09:13:11.268: %LINK-3-UPDOWN: Interface Ethernet0/2, changed state to up\n*Dec 28 09:13:11.268: %LINK-3-UPDOWN: Interface Ethernet0/3, changed state to up\n*Dec 28 09:13:12.272: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet0/2, changed state to up\n*Dec 28 09:13:12.272: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet0/3, changed state to up\nSW3(config-if-range)#\n*Dec 28 09:13:18.543: %LINEPROTO-5-UPDOWN: Line protocol on Interface Port-channel1, changed state to up"
+        }
+      ],
+      "text": "On SW3, enter the following commands:\n\nLine protocol for physical interfaces Ethernet 0/2 and Ethernet 0/3 changes state to up. Logical interface port channel 1 also transitions to the up state."
+    },
+    "instructions": "Enable interfaces Ethernet0/2 and Ethernet0/3 on switch SW3.",
+    "title": "Step 8",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW1(config-if-range)# exit\nSW1(config)# interface port-channel 1\nSW1(config-if)# description EChannel to SW3\nSW1(config-if)# end\nSW1#"
+        }
+      ],
+      "text": "On SW1, enter the following commands:"
+    },
+    "instructions": "Add the **description EChannel to SW3** to port channel 1 interface on SW1 switch.",
+    "title": "Step 9",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW3(config-if-range)# exit\nSW3(config-if)# interface port-channel 1\nSW3(config-if)# description EChannel to SW1\nSW3(config-if)# end\nSW3#"
+        }
+      ],
+      "text": "On SW3, enter the following commands:"
+    },
+    "instructions": "Add the **description EChannel to SW1** to port channel 1 interface on SW3 switch.",
+    "title": "Step 10",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW1# show interfaces status\n\nPort      Name               Status       Vlan       Duplex  Speed Type\nEt0/0     Link to SW4        connected    trunk        auto   auto unknown\nEt0/1     Link to SW4        connected    trunk        auto   auto unknown\nEt0/2     Link to SW3        connected    trunk        auto   auto unknown\nEt0/3     Link to SW3        connected    trunk        auto   auto unknown\nEt1/0     Link to PC1        connected    10           auto   auto unknown\nEt1/1                        disabled     1            auto   auto unknown\nEt1/2                        disabled     1            auto   auto unknown\nEt1/3                        disabled     1            auto   auto unknown\nPo1       EChannel to SW3    connected    trunk        auto   auto"
+        }
+      ],
+      "text": "On SW1, enter the following command:\n\nEthernet0/2 and 0/3 information is still present in the output, like when you first displayed interface statuses. In addition, now Po1 is also listed. The port channel is up on SW1."
+    },
+    "instructions": "Display the interface status summary on SW1.",
+    "title": "Step 11",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW3# show interfaces status\n\nPort      Name               Status       Vlan       Duplex  Speed Type\nEt0/0     Link to SW2        connected    trunk        auto   auto unknown\nEt0/1     Link to SW2        connected    trunk        auto   auto unknown\nEt0/2     Link to SW1        connected    trunk        auto   auto unknown\nEt0/3     Link to SW1        connected    trunk        auto   auto unknown\nEt1/0     Link to SRV1       connected    10           auto   auto unknown\nEt1/1                         disabled    1            auto   auto unknown\nEt1/2     Link to SW4        connected    trunk        auto   auto unknown\nEt1/3     Link to SW4        connected    trunk        auto   auto unknown\nPo1       EChannel to SW1    connected    trunk        auto   auto"
+        }
+      ],
+      "text": "On SW3, enter the following command:\n\nPort Po1 is listed in the output, along with all other SW3 interfaces. The port channel is up on SW3."
+    },
+    "instructions": "Display the interface status summary on SW3.",
+    "title": "Step 12",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW1# show spanning-tree vlan 10\n\nVLAN0010\n  Spanning tree enabled protocol ieee\n  Root ID    Priority    24586\n             Address     aabb.cc00.0800\n             Cost        56\n             Port        65 (Port-channel1)\n             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec\n\n  Bridge ID  Priority    32778  (priority 32768 sys-id-ext 10)\n             Address     aabb.cc00.0500\n             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec\n             Aging Time  15  sec\n\nInterface           Role Sts Cost      Prio.Nbr Type\n------------------- ---- --- --------- -------- --------------------------------\nEt0/0               Desg FWD 100       128.1    Shr\nEt0/1               Desg FWD 100       128.2    Shr\nEt1/0               Desg FWD 100       128.5    Shr\nPo1                 Root FWD 56        128.65   Shr"
+        },
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW4# show spanning-tree vlan 10\n\nVLAN0010\n  Spanning tree enabled protocol ieee\n  Root ID    Priority    24586\n             Address     aabb.cc01.2100\n             Cost        100\n             Port        7 (Ethernet1/2)\n             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec\n\n  Bridge ID  Priority    28682  (priority 28672 sys-id-ext 10)\n             Address     aabb.cc01.2200\n             Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec\n             Aging Time  300 sec\n\nInterface           Role Sts Cost      Prio.Nbr Type\n------------------- ---- --- --------- -------- --------------------------------\nEt0/0               Altn BLK 100       128.1    Shr \nEt0/1               Altn BLK 100       128.2    Shr \nEt0/2               Desg FWD 100       128.3    Shr \nEt0/3               Desg FWD 100       128.4    Shr \nEt1/2               Root FWD 100       128.7    Shr \nEt1/3               Altn BLK 100       128.8    Shr "
+        }
+      ],
+      "text": "On SW1, enter the following command:\n\nIf you display spanning tree information quickly enough, you may find interfaces Ethernet0/0 and 0/1 in listening or learning state. If so, repeat the command until all interfaces are in the forwarding state. The cost of the port channel is 56, which is much lower than the cost of 100, assigned to individual interfaces.\n\nThe MAC addresses might differ in your output.\n\nEthernet0/2 and 0/3 are no longer visible to the spanning tree. Instead, they have been replaced by the logical port channel 1 interface. The port channel is in the forwarding state. The forwarding state implies that the port channel is forwarding on all member interfaces. The cost of the port channel is 56, which is much lower than the cost of 100, assigned to individual interfaces. The following figure shows the STP topology for VLAN 10, after the link aggregation.\n\nThe Ethernet0/0 and Ethernet 0/1 are not in the blocking state any more. They are now forwarding. These interfaces connect to SW4. Since the path from SW1 back to the root (SW3) now costs less due to the port channel establishment, its ports have been selected as the designated ports for these two links. However, the ports on SW4 side of the links are now in the blocking state, which you can verify by issuing the `show spanning-tree vlan 10` command on SW4:\n\nNote that aggregating links does not affect STP root switch selection. The root selection is based on the switch STP priority and its MAC address."
+    },
+    "instructions": "To analyze whether and how the bundling of ports affected the STP topology, display the spanning tree information for VLAN 10 on SW1 again. You should notice changes compared to what you were seeing before the links were aggregated.",
+    "notes": [
+      "The MAC addresses might differ in your output."
+    ],
+    "title": "Step 13",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW1# show interfaces Port-channel 1\nPort-channel1 is up, line protocol is up (connected)\n  Hardware is Ethernet, address is aabb.cc00.0530 (bia aabb.cc00.0530)\n  Description: EChannel to SW3\n  MTU 1500 bytes, BW 20000 Kbit/sec, DLY 1000 usec,\n     reliability 255/255, txload 1/255, rxload 1/255\n  Encapsulation ARPA, loopback not set\n  Keepalive set (10 sec)\n  Auto-duplex, Auto-speed, media type is unknown\n  input flow-control is off, output flow-control is unsupported\n  Members in this channel: Et0/2 Et0/3\n  ARP type: ARPA, ARP Timeout 04:00:00\n  Last input 00:00:00, output never, output hang never\n  Last clearing of \"show interface\" counters never\n  Input queue: 0/2000/0/0 (size/max/drops/flushes); Total output drops: 0\n  Queueing strategy: fifo\n  Output queue: 0/40 (size/max)\n  5 minute input rate 0 bits/sec, 0 packets/sec\n  5 minute output rate 0 bits/sec, 0 packets/sec\n     2041 packets input, 162930 bytes, 0 no buffer\n     Received 1858 broadcasts (0 multicasts)\n     0 runts, 0 giants, 0 throttles\n     0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored\n     0 input packets with dribble condition detected\n     2069 packets output, 158394 bytes, 0 underruns\n     0 output errors, 0 collisions, 0 interface resets\n     0 unknown protocol drops\n     0 babbles, 0 late collision, 0 deferred\n     0 lost carrier, 0 no carrier\n     0 output buffer failures, 0 output buffers swapped out"
+        }
+      ],
+      "text": "On SW1, enter the following command:\n\nFrom the output, you can determine that the port channel 1 bundles Ethernet0/2 and Ethernet 0/3 interfaces, and that the logical bandwidth of the aggregated link is 20 Mbps (20000 Kbit/s), twice the bandwidth of the individual interfaces."
+    },
+    "instructions": "Now that you have successfully configured link aggregation, verify the configuration by displaying the interface information of the port channel 1 interface on SW1.",
+    "title": "Step 14",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW1# show etherchannel port-channel\n                Channel-group listing:\n                ----------------------\n\nGroup: 1\n----------\n                Port-channels in the group:\n                ---------------------------\n\nPort-channel: Po1    (Primary Aggregator)\n\n------------\n\nAge of the Port-channel   = 0d:01h:11m:56s\nLogical slot/port   = 16/0          Number of ports = 2\nHotStandBy port = null\nPort state          = Port-channel Ag-Inuse\nProtocol            =   LACP\nPort security       = Disabled\n\nPorts in the Port-channel:\n\nIndex   Load   Port     EC state        No of bits\n------+------+------+------------------+-----------\n  0     00     Et0/2    Active             0\n  0     00     Et0/3    Active             0\n\nTime since last port bundled:    0d:01h:11m:39s    Et0/2"
+        }
+      ],
+      "text": "On SW1, enter the following command:\n\nFrom the output, you can determine that the number of ports in this port channel is two. The members are the Ethernet0/2 and Ethernet0/3 interfaces. The protocol that was used to build the bundle is LACP."
+    },
+    "instructions": "To view aggregation details, such as aggregation method and how long the aggregated link has been up, display the detailed EtherChannel information on SW1.",
+    "title": "Step 15",
+    "type": "Lab Step"
+  },
+  {
+    "answer": {
+      "codeBlocks": [
+        {
+          "classes": "language-cisco-ios font-mono hljs",
+          "content": "SW1# show etherchannel summary\nFlags:  D - down        P - bundled in port-channel\n        I - stand-alone s - suspended\n        H - Hot-standby (LACP only)\n        R - Layer3      S - Layer2\n        U - in use      f - failed to allocate aggregator\n\n        M - not in use, minimum links not met\n        u - unsuitable for bundling\n        w - waiting to be aggregated\n        d - default port\n\n\nNumber of channel-groups in use: 1\nNumber of aggregators:           1\n\nGroup  Port-channel  Protocol    Ports\n------+-------------+-----------+-----------------------------------------------\n1      Po1(SU)         LACP      Et0/2(P)    Et0/3(P)"
+        }
+      ],
+      "text": "On SW1, enter the following command:"
+    },
+    "instructions": "View summarized information about the aggregated EtherChannel links on the SW1 switch.",
+    "title": "Step 16",
+    "type": "Lab Step"
+  }
+]

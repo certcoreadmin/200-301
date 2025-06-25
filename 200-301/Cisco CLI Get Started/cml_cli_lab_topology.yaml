@@ -1,0 +1,103 @@
+# cml_cli_lab_topology.yaml
+# CML 2.8.1+ Topology for CCNA Lab: Cisco CLI Fundamentals
+# Author: CCIE #70000
+
+annotations:
+  - border_color: '#00000000'
+    border_style: ''
+    color: '#808080FF'
+    rotation: 0
+    text_bold: false
+    text_content: 'Lab: Cisco CLI Fundamentals'
+    text_font: sans-serif
+    text_italic: false
+    text_size: 16
+    text_unit: pt
+    thickness: 1
+    type: text
+    x1: -300.0
+    y1: -200.0
+    z_index: 0
+
+smart_annotations: []
+
+nodes:
+  - id: n0
+    boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |
+          ! Base configuration for SW1
+          hostname SW1
+          no ip domain-lookup
+          line con 0
+           logging synchronous
+           exec-timeout 0 0
+    cpus: 1
+    image_definition: null
+    label: SW1
+    node_definition: iosvl2
+    ram: 2048
+    x: -150
+    y: 0
+    interfaces:
+      - id: i0
+        label: GigabitEthernet0/0
+        mac_address: null
+        slot: 0
+        type: physical
+      - id: i1
+        label: GigabitEthernet0/1
+        mac_address: null
+        slot: 1
+        type: physical
+      - id: i2
+        label: GigabitEthernet0/2
+        mac_address: null
+        slot: 2
+        type: physical
+      - id: i3
+        label: GigabitEthernet0/3
+        mac_address: null
+        slot: 3
+        type: physical
+
+  - id: n1
+    boot_disk_size: null
+    configuration:
+      - name: ios_config.txt
+        content: |
+          ! Base configuration for R1
+          hostname R1
+          no ip domain-lookup
+          line con 0
+           logging synchronous
+           exec-timeout 0 0
+    cpus: 1
+    image_definition: null
+    label: R1
+    node_definition: iosv
+    ram: 2048
+    x: 150
+    y: 0
+    interfaces:
+      - id: i0
+        label: GigabitEthernet0/0
+        mac_address: null
+        slot: 0
+        type: physical
+      - id: i1
+        label: GigabitEthernet0/1
+        mac_address: null
+        slot: 1
+        type: physical
+
+links: []
+
+lab:
+  description: A foundational lab for learning Cisco IOS CLI navigation, command modes, and configuration management.
+  notes: |
+    This lab is designed to be completed by accessing each device via its console port.
+    No network connectivity between devices is required.
+  title: CCNA Lab - CLI Fundamentals
+  version: "0.3.0"
